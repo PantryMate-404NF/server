@@ -1,0 +1,66 @@
+plugins {
+    id 'org.springframework.boot' version '4.1.0' apply false
+    id 'io.spring.dependency-management' version '1.1.6' apply false
+}
+
+// 전체 프로젝트 공통 설정
+allprojects {
+    group = 'com.pantrymate'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+// 모든 서브모듈 공통 설정
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            // 워크플로우(CI)의 java-version과 반드시 일치해야 함
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    ext {
+        set('springCloudVersion', '2025.1.2')
+    }
+
+    // Spring Boot / Spring Cloud BOM으로 의존성 버전을 일괄 관리 (각 서비스에서 버전 명시 불필요)
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:4.1.0"
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+    dependencies {
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}
+
+// Spring Boot 플러그인(실행 가능 JAR)은 실제 서버 모듈에만 적용
+// modules:common은 라이브러리이므로 제외
+configure(subprojects.findAll {
+    it.path.startsWith(':services:') || it.path.startsWith(':platform:')
+}) {
+    apply plugin: 'org.springframework.boot'
+}
+
+// 계층형 모듈 구조를 위한 bootJar task 선별 비활성화
+subprojects {
+    plugins.withType(org.springframework.boot.gradle.plugin.SpringBootPlugin) {
+        tasks.named('bootJar') {
+            enabled = childProjects.size() == 0
+        }
+    }
+}
