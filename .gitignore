@@ -33,3 +33,6 @@ bin/
 .env
 .env.*
 !.env.example
+
+### Claude ###
+.claude_note
