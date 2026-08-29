@@ -3,13 +3,18 @@
 재고를 아는 커머스, 구매 이력이 곧 재고 데이터가 되는 B2C 신선식품 플랫폼
 PantryMate 백엔드 팀입니다.
 
-## 👥 팀원 소개
+<br>
+
+## 👥 **팀원 소개**
 | Github | [<img src="https://avatars.githubusercontent.com/yS2h" width="130px;">](https://github.com/yS2h) | [<img src="https://avatars.githubusercontent.com/jeonggugo" width="130px;">](https://github.com/jeonggugo) |
+|---|---|---|
+
 | 이름 | 담당 도메인 | 주요 구현 내용 |
 | --- | --- | --- |
 | 정국 | 상품 / 장바구니·주문·결제 | 상품 등록·조회, 카테고리, 장바구니 CRUD, 주문서 작성·조회·취소, 토스페이먼츠 결제 승인·취소·정합성 재조회 |
 | 수현 | 계정 및 회원 | 회원가입, 로그인/JWT, 배송지·식이 설정 관리 | 알림 | 인앱 알림함, FCM 푸시 발송, 알림 수신 설정 |
 | 수현, 정국 | 스마트 팬트리 | 팬트리 등록, 레시피 기반 갭 분석, AI 팀 레시피 추천 중계 |
+<br>
 
 ## 🛠 기술 스택
 
