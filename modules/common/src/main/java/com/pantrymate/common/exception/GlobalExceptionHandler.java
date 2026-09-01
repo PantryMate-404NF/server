@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-                .body(ErrorResponse.from(ErrorCode.INTERNAL_SERVER_ERROR));
+        return ResponseEntity.status(CommonErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ErrorResponse.from(CommonErrorCode.INTERNAL_SERVER_ERROR));
     }
 }
