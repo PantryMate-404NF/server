@@ -12,7 +12,7 @@ include 'modules:common'
 }
 
 // 마이크로서비스 — 새 서비스 추가 시 이 목록에 이름만 추가하면 됨
-['user-service'].each { svc ->
+['user-service', 'product-service', 'order-payment-service'].each { svc ->
     if (file("services/${svc}").exists()) {
         include "services:${svc}"
     }
