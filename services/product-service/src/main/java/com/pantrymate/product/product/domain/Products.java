@@ -21,19 +21,15 @@ import lombok.NoArgsConstructor;
 
 /**
  * 상품 엔티티.
- *
- * [MSA 설계 원칙] category_id는 같은 product-service 안이라 FK 가능.
- * ingredient_id는 Pantry 도메인(별도 서비스) 소유의 표준 식재료를 가리키는
- * 논리적 참조값이다. FK 제약은 걸지 않으며, 매핑 여부에 따라 null일 수 있다.
- *
- * [팀 컨벤션] @AllArgsConstructor로 생성자가 열려있지만,
- * new Products(...)는 애플리케이션 계층(ProductService)에서만 호출한다.
- *
- * [상태 관리] status는 재고 변화와 연동된다. stockQuantity가 0이 되면
- * decreaseStock()이 자동으로 OUT_OF_STOCK으로 전이시키고, 재입고되어
- * 수량이 다시 늘어나면 restock()이 ON_SALE로 복귀시킨다.
- * DISCONTINUED 이후 완전히 접는 결정은 status가 아니라 deletedAt(소프트 삭제)으로
- * 표현하며, 물리적 삭제는 하지 않는다 (이력 보존 원칙).
+ * <p>
+ * [MSA 설계 원칙] category_id는 같은 product-service 안이라 FK 가능. ingredient_id는 Pantry 도메인(별도 서비스) 소유의 표준
+ * 식재료를 가리키는 논리적 참조값이다. FK 제약은 걸지 않으며, 매핑 여부에 따라 null일 수 있다.
+ * <p>
+ * [팀 컨벤션] @AllArgsConstructor로 생성자가 열려있지만, new Products(...)는 애플리케이션 계층(ProductService)에서만 호출한다.
+ * <p>
+ * [상태 관리] status는 재고 변화와 연동된다. stockQuantity가 0이 되면 decreaseStock()이 자동으로 OUT_OF_STOCK으로 전이시키고,
+ * 재입고되어 수량이 다시 늘어나면 restock()이 ON_SALE로 복귀시킨다. DISCONTINUED 이후 완전히 접는 결정은 status가 아니라 deletedAt(소프트
+ * 삭제)으로 표현하며, 물리적 삭제는 하지 않는다 (이력 보존 원칙).
  */
 @Entity
 @Table(name = "products", uniqueConstraints = {
@@ -65,23 +61,33 @@ public class Products {
     @Column(nullable = false)
     private ProductUnit unit;
 
-    /** 중량/용량 실측치 (예: 500). 단위는 unit 참고 */
+    /**
+     * 중량/용량 실측치 (예: 500). 단위는 unit 참고
+     */
     private Integer capacity;
 
-    /** 구성 개수 (예: 3개입 → 3) */
+    /**
+     * 구성 개수 (예: 3개입 → 3)
+     */
     private Integer packageCount;
 
-    /** 원산지 */
+    /**
+     * 원산지
+     */
     private String origin;
 
-    /** 상품 상세 설명 */
+    /**
+     * 상품 상세 설명
+     */
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
     private String thumbnailUrl;
 
-    /** 팬트리 표준 식재료 참조값. 매핑 전에는 null일 수 있다. */
+    /**
+     * 팬트리 표준 식재료 참조값. 매핑 전에는 null일 수 있다.
+     */
     private Long ingredientId;
 
     @Column(nullable = false)
@@ -115,7 +121,9 @@ public class Products {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /** 재고를 차감한다. 차감 후 재고가 0이 되면 자동으로 품절 상태로 전이한다. */
+    /**
+     * 재고를 차감한다. 차감 후 재고가 0이 되면 자동으로 품절 상태로 전이한다.
+     */
     public void decreaseStock(int quantity) {
         if (quantity <= 0) {
             throw new IllegalArgumentException("차감 수량은 0보다 커야 합니다.");
@@ -131,7 +139,9 @@ public class Products {
         }
     }
 
-    /** 재입고 처리. 품절 상태였다면 판매중으로 복귀시킨다. */
+    /**
+     * 재입고 처리. 품절 상태였다면 판매중으로 복귀시킨다.
+     */
     public void restock(int quantity) {
         if (quantity <= 0) {
             throw new IllegalArgumentException("재입고 수량은 0보다 커야 합니다.");
@@ -144,14 +154,15 @@ public class Products {
         }
     }
 
-    /** 판매 중단 처리 (재개 가능성 있는 상태). */
+    /**
+     * 판매 중단 처리 (재개 가능성 있는 상태).
+     */
     public void discontinue() {
         changeStatus(ProductStatus.DISCONTINUED);
     }
 
     /**
-     * 소프트 삭제. DISCONTINUED 상태를 거친 상품만 삭제할 수 있다
-     * (판매중/품절 상태에서 곧바로 삭제하는 것은 막는다).
+     * 소프트 삭제. DISCONTINUED 상태를 거친 상품만 삭제할 수 있다 (판매중/품절 상태에서 곧바로 삭제하는 것은 막는다).
      */
     public void delete() {
         if (this.status != ProductStatus.DISCONTINUED) {
@@ -164,7 +175,9 @@ public class Products {
         return this.deletedAt != null;
     }
 
-    /** 팬트리 표준 식재료와의 매핑 여부. */
+    /**
+     * 팬트리 표준 식재료와의 매핑 여부.
+     */
     public boolean isMappedToIngredient() {
         return this.ingredientId != null;
     }

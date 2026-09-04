@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
@@ -29,11 +30,13 @@ public class ProductService {
         if (productRepository.existsBySku(request.sku())) {
             throw new BusinessException(ProductErrorCode.DUPLICATE_SKU);
         }
-        if(!categoryRepository.existsById(request.categoryId()))
+        if (!categoryRepository.existsById(request.categoryId())) {
             throw new BusinessException(CategoryErrorCode.CATEGORY_NOT_FOUND);
-        if(request.thumbnailUrl()==null || request.thumbnailUrl().isBlank())
+        }
+        if (request.thumbnailUrl() == null || request.thumbnailUrl().isBlank()) {
             throw new BusinessException(ProductErrorCode.THUMBNAIL_REQUIRED);
-        if(request.price() == null || request.price() <= 0){
+        }
+        if (request.price() == null || request.price() <= 0) {
             throw new BusinessException(ProductErrorCode.INVALID_PRICE);
         }
 

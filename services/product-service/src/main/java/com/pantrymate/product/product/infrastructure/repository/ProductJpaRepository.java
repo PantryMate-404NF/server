@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 
 public interface ProductJpaRepository extends JpaRepository<Products, Long>, ProductRepository {
+
     @Override
     Optional<Products> findBySku(String sku);
 

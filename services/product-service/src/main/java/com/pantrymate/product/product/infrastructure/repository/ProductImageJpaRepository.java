@@ -5,7 +5,9 @@ import com.pantrymate.product.product.domain.repository.ProductImageRepository;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ProductImageJpaRepository extends JpaRepository<ProductImages, Long>, ProductImageRepository {
+public interface ProductImageJpaRepository extends JpaRepository<ProductImages, Long>,
+    ProductImageRepository {
+
     @Override
     List<ProductImages> findByProductIdOrderBySortOrderAsc(Long ProductId);
 }

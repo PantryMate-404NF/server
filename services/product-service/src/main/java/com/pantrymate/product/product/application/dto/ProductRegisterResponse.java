@@ -8,9 +8,10 @@ public record ProductRegisterResponse(
     String sku,
     String name,
     String status,
-    LocalDateTime createAt
+    LocalDateTime createdAt
 ) {
-    public static ProductRegisterResponse from(Products product){
+
+    public static ProductRegisterResponse from(Products product) {
         return new ProductRegisterResponse(
             product.getProductId(),
             product.getSku(),

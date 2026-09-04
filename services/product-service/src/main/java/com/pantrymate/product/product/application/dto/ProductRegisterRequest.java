@@ -41,7 +41,6 @@ public record ProductRegisterRequest(
     @PositiveOrZero
     Integer stockQuantity
 
-
 ) {
 
 }
