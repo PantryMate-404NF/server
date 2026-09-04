@@ -1,17 +1,24 @@
 package com.pantrymate.product.product.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
+import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductRegisterResponse;
+import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.application.service.ProductService;
 import com.pantrymate.product.product.domain.Products;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,4 +38,16 @@ public class ProductController {
 
         return ApiResponse.success("상품 등록이 정상 처리되었습니다.", response);
     }
+
+    @GetMapping
+    public ApiResponse<ProductListResponse> getProductList(
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "60") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        ProductListResponse response = productService.getProductList(categoryId, pageable);
+        return ApiResponse.success("상품 목록을 정상 조회하였습니다.", response);
+    }
+
 }

@@ -1,9 +1,12 @@
 package com.pantrymate.product.product.application.service;
 
+import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.exception.BusinessException;
 import com.pantrymate.product.category.domain.exception.CategoryErrorCode;
 import com.pantrymate.product.category.domain.repository.CategoryRepository;
+import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
+import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
 import com.pantrymate.product.product.domain.enums.ProductUnit;
@@ -11,8 +14,11 @@ import com.pantrymate.product.product.domain.exception.ProductErrorCode;
 import com.pantrymate.product.product.domain.repository.ProductImageRepository;
 import com.pantrymate.product.product.domain.repository.ProductRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +48,18 @@ public class ProductService {
 
         Products product = buildNewProduct(request);
         return productRepository.save(product);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductListResponse getProductList(Long categoryId, Pageable pageable) {
+        Page<Products> productPage = (categoryId == null)
+            ? productRepository.findByDeletedAtIsNullAndStatusNot(ProductStatus.DISCONTINUED,
+            pageable)
+            : productRepository.findByCategoryIdAndDeletedAtIsNullAndStatusNot(categoryId,
+                ProductStatus.DISCONTINUED, pageable);
+        Page<ProductSummaryResponse> summaryPages = productPage.map(ProductSummaryResponse::from);
+
+        return ProductListResponse.from(summaryPages);
     }
 
     private Products buildNewProduct(ProductRegisterRequest request) {
