@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum CategoryErrorCode implements ErrorCode {
     // --- 공통 에러 (COM) ---
-    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COM-40001", "잘못된 입력값입니다.");
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COM-40001", "잘못된 입력값입니다."),
+
+    CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "Category-001", "존재하지 않는 카테고리입니다.");
 
     private final HttpStatus status;
     private final String code;
