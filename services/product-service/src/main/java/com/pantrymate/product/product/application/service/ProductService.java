@@ -2,11 +2,15 @@ package com.pantrymate.product.product.application.service;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.product.category.domain.Categories;
 import com.pantrymate.product.category.domain.exception.CategoryErrorCode;
 import com.pantrymate.product.category.domain.repository.CategoryRepository;
+import com.pantrymate.product.product.application.dto.ProductDetailResponse;
+import com.pantrymate.product.product.application.dto.ProductImageResponse;
 import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
+import com.pantrymate.product.product.domain.ProductImages;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
 import com.pantrymate.product.product.domain.enums.ProductUnit;
@@ -60,6 +64,29 @@ public class ProductService {
         Page<ProductSummaryResponse> summaryPages = productPage.map(ProductSummaryResponse::from);
 
         return ProductListResponse.from(summaryPages);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductDetailResponse getProductDetail(Long productId) {
+        Products product = productRepository.findById(productId)
+            .filter(p -> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        String categoryName = categoryRepository.findById(product.getCategoryId())
+            .map(Categories::getName)
+            .orElse(null);
+
+        List<ProductImageResponse> images = productImageRepository.findByProductIdOrderBySortOrderAsc(productId)
+            .stream()
+            .map(ProductImageResponse::from)
+            .toList();
+
+        return ProductDetailResponse.of(product, categoryName, images);
+
+
+
+
+
+
     }
 
     private Products buildNewProduct(ProductRegisterRequest request) {

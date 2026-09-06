@@ -1,6 +1,7 @@
 package com.pantrymate.product.product.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
+import com.pantrymate.product.product.application.dto.ProductDetailResponse;
 import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductRegisterResponse;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +50,15 @@ public class ProductController {
         Pageable pageable = PageRequest.of(page, size);
         ProductListResponse response = productService.getProductList(categoryId, pageable);
         return ApiResponse.success("상품 목록을 정상 조회하였습니다.", response);
+    }
+
+    @GetMapping("/{productId}")
+    public ApiResponse<ProductDetailResponse> getProductDetail(
+        @PathVariable Long productId) {
+
+        ProductDetailResponse response = productService.getProductDetail(productId);
+
+        return ApiResponse.success("상품 상세를 조회했습니다.", response);
     }
 
 }

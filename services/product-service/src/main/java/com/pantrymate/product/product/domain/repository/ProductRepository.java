@@ -13,6 +13,7 @@ public interface ProductRepository {
     Optional<Products> findBySku(String sku);
     boolean existsBySku(String sku);
     List<Products> findByCategoryId(Long categoryId);
+    Optional<Products> findById(Long id);
 
     Page<Products> findByDeletedAtIsNullAndStatusNot(ProductStatus status, Pageable pageable);
     Page<Products> findByCategoryIdAndDeletedAtIsNullAndStatusNot(Long categoryId, ProductStatus status, Pageable pageable);
