@@ -5,6 +5,8 @@ import com.pantrymate.product.product.application.dto.ProductDetailResponse;
 import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductRegisterResponse;
+import com.pantrymate.product.product.application.dto.ProductRestockRequest;
+import com.pantrymate.product.product.application.dto.ProductRestockResponse;
 import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
 import com.pantrymate.product.product.application.dto.ProductUpdateResponse;
@@ -65,13 +67,25 @@ public class ProductController {
     }
 
     @PatchMapping("/{productId}")
-    public ApiResponse<ProductUpdateResponse>  updateProduct(
+    public ApiResponse<ProductUpdateResponse> updateProduct(
         @PathVariable Long productId,
-        @RequestBody ProductUpdateRequest request){
+        @RequestBody ProductUpdateRequest request) {
         Products updatedProduct = productService.updateProduct(productId, request);
         ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
 
         return ApiResponse.success("상품 정보가 수정되었습니다.", response);
     }
+
+    @PatchMapping("/{productId}/restock")
+    public ApiResponse<ProductRestockResponse> restockProduct(
+        @PathVariable Long productId,
+        @Valid @RequestBody ProductRestockRequest request
+    ){
+        Products restockProduct = productService.restockProduct(productId, request.quantity());
+        ProductRestockResponse response = ProductRestockResponse.from(restockProduct);
+
+        return ApiResponse.success("수량조정이 정상적으로 완료되었습니다.", response);
+    }
+
 
 }

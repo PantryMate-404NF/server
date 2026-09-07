@@ -143,6 +143,9 @@ public class Products {
      * 재입고 처리. 품절 상태였다면 판매중으로 복귀시킨다.
      */
     public void restock(int quantity) {
+        if (this.status == ProductStatus.DISCONTINUED) {
+            throw new IllegalStateException("판매중단된 상품은 재입고할 수 없습니다.");
+        }
         if (quantity <= 0) {
             throw new IllegalArgumentException("재입고 수량은 0보다 커야 합니다.");
         }

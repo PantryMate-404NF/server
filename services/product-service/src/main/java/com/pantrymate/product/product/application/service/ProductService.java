@@ -76,7 +76,8 @@ public class ProductService {
             .map(Categories::getName)
             .orElse(null);
 
-        List<ProductImageResponse> images = productImageRepository.findByProductIdOrderBySortOrderAsc(productId)
+        List<ProductImageResponse> images = productImageRepository.findByProductIdOrderBySortOrderAsc(
+                productId)
             .stream()
             .map(ProductImageResponse::from)
             .toList();
@@ -88,12 +89,12 @@ public class ProductService {
     @Transactional
     public Products updateProduct(Long productId, ProductUpdateRequest request) {
         Products product = productRepository.findById(productId)
-            .filter(p-> !p.isDeleted())
+            .filter(p -> !p.isDeleted())
             .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
-        if(request.categoryId() != null && !categoryRepository.existsById(request.categoryId())) {
+        if (request.categoryId() != null && !categoryRepository.existsById(request.categoryId())) {
             throw new BusinessException(CategoryErrorCode.CATEGORY_NOT_FOUND);
         }
-        if(request.price() != null && request.price() <= 0) {
+        if (request.price() != null && request.price() <= 0) {
             throw new BusinessException(ProductErrorCode.INVALID_PRICE);
         }
         ProductUnit unit = (request.unit() != null) ? ProductUnit.valueOf(request.unit()) : null;
@@ -111,6 +112,22 @@ public class ProductService {
         );
         return product;
     }
+
+    @Transactional
+    public Products restockProduct(Long productId, int quantity) {
+        Products product = productRepository.findById(productId)
+            .filter(p -> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        try{
+            product.restock(quantity);
+        }catch (IllegalArgumentException e){
+            throw new BusinessException(ProductErrorCode.INVALID_QUANTITY);
+        }catch (IllegalStateException e){
+            throw new BusinessException(ProductErrorCode.CANNOT_RESTOCK_DISCONTINUED);
+        }
+        return product;
+    }
+
 
     private Products buildNewProduct(ProductRegisterRequest request) {
         LocalDateTime now = LocalDateTime.now();

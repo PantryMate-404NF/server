@@ -13,7 +13,9 @@ public enum ProductErrorCode implements ErrorCode {
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT-002", "상품을 찾을 수 없습니다."),
     THUMBNAIL_REQUIRED(HttpStatus.BAD_REQUEST, "PRODUCT-003", "대표 이미지를 등록해 주세요."),
     INVALID_PRICE(HttpStatus.BAD_REQUEST, "PRODUCT-004", "올바른 가격을 입력해 주세요."),
-    INVALID_PRODUCT_STATUS(HttpStatus.CONFLICT, "PRODUCT-005", "판매중단 상태의 상품만 삭제할 수 있습니다.");
+    INVALID_PRODUCT_STATUS(HttpStatus.CONFLICT, "PRODUCT-005", "판매중단 상태의 상품만 삭제할 수 있습니다."),
+    INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "PRODUCT-006", "수량은 0보다 커야합니다."),
+    CANNOT_RESTOCK_DISCONTINUED(HttpStatus.CONFLICT, "PRODUCT-007", "판매중단된 상품은 재입고가 불가능합니다.");
 
 
     private final HttpStatus status;
