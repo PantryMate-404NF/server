@@ -11,15 +11,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
-        return ResponseEntity
-            .status(errorCode.getStatus())
-            .body(ApiResponse.error(errorCode));
+        return ResponseEntity.status(errorCode.getStatus()).body(ApiResponse.error(errorCode));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
-        return ResponseEntity
-            .status(CommonErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-            .body(ApiResponse.error(CommonErrorCode.INTERNAL_SERVER_ERROR));
+        return ResponseEntity.status(CommonErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ApiResponse.error(CommonErrorCode.INTERNAL_SERVER_ERROR));
     }
 }
