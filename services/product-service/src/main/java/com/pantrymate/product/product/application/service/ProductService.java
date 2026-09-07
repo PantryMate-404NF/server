@@ -128,6 +128,19 @@ public class ProductService {
         return product;
     }
 
+    @Transactional
+    public Products discontinueProduct(Long productId) {
+        Products product = productRepository.findById(productId)
+            .filter(p-> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        try{
+            product.discontinue();
+        }catch (IllegalStateException e){
+            throw  new BusinessException(ProductErrorCode.ALREADY_DISCONTINUED);
+        }
+        return product;
+    }
+
 
     private Products buildNewProduct(ProductRegisterRequest request) {
         LocalDateTime now = LocalDateTime.now();

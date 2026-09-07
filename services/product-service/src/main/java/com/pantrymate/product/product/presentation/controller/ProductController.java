@@ -2,6 +2,7 @@ package com.pantrymate.product.product.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.product.product.application.dto.ProductDetailResponse;
+import com.pantrymate.product.product.application.dto.ProductDiscontinueResponse;
 import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductRegisterResponse;
@@ -85,6 +86,15 @@ public class ProductController {
         ProductRestockResponse response = ProductRestockResponse.from(restockProduct);
 
         return ApiResponse.success("수량조정이 정상적으로 완료되었습니다.", response);
+    }
+
+    @PatchMapping("/{productId}/discontinue")
+    public ApiResponse<ProductDiscontinueResponse> discontinueProduct(
+        @PathVariable Long productId
+    ) {
+        Products discontinueProduct = productService.discontinueProduct(productId);
+        ProductDiscontinueResponse response = ProductDiscontinueResponse.from(discontinueProduct);
+        return ApiResponse.success("상품 판매중단 요청이 정상적으로 완료되었습니다.", response);
     }
 
 
