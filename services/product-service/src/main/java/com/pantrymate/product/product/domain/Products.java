@@ -181,4 +181,43 @@ public class Products {
     public boolean isMappedToIngredient() {
         return this.ingredientId != null;
     }
+    public void updateInfo(
+        String name,
+        Long categoryId,
+        Long price,
+        ProductUnit unit,
+        Integer capacity,
+        Integer packageCount,
+        String origin,
+        String description,
+        String thumbnailUrl){
+        if(name != null) {
+            this.name = name;
+        }
+        if(categoryId != null) {
+            this.categoryId = categoryId;
+        }
+        if(price != null) {
+            this.price = price;
+        }
+        if(unit != null) {
+            this.unit = unit;
+        }
+        if(capacity != null) {
+            this.capacity = capacity;
+        }
+        if(packageCount != null) {
+            this.packageCount = packageCount;
+        }
+        if(origin != null) {
+            this.origin = origin;
+        }
+        if(description != null) {
+            this.description = description;
+        }
+        if(thumbnailUrl != null) {
+            this.thumbnailUrl = thumbnailUrl;
+        }
+
+    }
 }

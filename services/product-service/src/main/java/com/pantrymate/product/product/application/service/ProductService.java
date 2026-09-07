@@ -10,6 +10,7 @@ import com.pantrymate.product.product.application.dto.ProductImageResponse;
 import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
+import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
 import com.pantrymate.product.product.domain.ProductImages;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
@@ -82,11 +83,33 @@ public class ProductService {
 
         return ProductDetailResponse.of(product, categoryName, images);
 
+    }
 
+    @Transactional
+    public Products updateProduct(Long productId, ProductUpdateRequest request) {
+        Products product = productRepository.findById(productId)
+            .filter(p-> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        if(request.categoryId() != null && !categoryRepository.existsById(request.categoryId())) {
+            throw new BusinessException(CategoryErrorCode.CATEGORY_NOT_FOUND);
+        }
+        if(request.price() != null && request.price() <= 0) {
+            throw new BusinessException(ProductErrorCode.INVALID_PRICE);
+        }
+        ProductUnit unit = (request.unit() != null) ? ProductUnit.valueOf(request.unit()) : null;
 
-
-
-
+        product.updateInfo(
+            request.name(),
+            request.categoryId(),
+            request.price(),
+            unit,
+            request.capacity(),
+            request.packageCount(),
+            request.origin(),
+            request.description(),
+            request.thumbnailUrl()
+        );
+        return product;
     }
 
     private Products buildNewProduct(ProductRegisterRequest request) {
