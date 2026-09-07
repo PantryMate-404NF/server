@@ -16,6 +16,14 @@ services:
     networks:
       - monitoring
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - monitoring
+
 volumes:
   postgres-data:
 
