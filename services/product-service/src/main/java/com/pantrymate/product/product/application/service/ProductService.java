@@ -141,6 +141,19 @@ public class ProductService {
         return product;
     }
 
+    @Transactional
+    public Products deleteProduct(Long productId) {
+        Products product = productRepository.findById(productId)
+            .filter(p-> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        try{
+            product.delete();
+        }catch (IllegalStateException e){
+            throw new BusinessException(ProductErrorCode.INVALID_PRODUCT_STATUS);
+        }
+        return product;
+    }
+
 
     private Products buildNewProduct(ProductRegisterRequest request) {
         LocalDateTime now = LocalDateTime.now();

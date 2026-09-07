@@ -1,6 +1,7 @@
 package com.pantrymate.product.product.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
+import com.pantrymate.product.product.application.dto.ProductDeleteResponse;
 import com.pantrymate.product.product.application.dto.ProductDetailResponse;
 import com.pantrymate.product.product.application.dto.ProductDiscontinueResponse;
 import com.pantrymate.product.product.application.dto.ProductListResponse;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,12 +35,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
-@ResponseStatus(HttpStatus.CREATED)
 public class ProductController {
 
     private final ProductService productService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ProductRegisterResponse> registerProduct(
         @Valid @RequestBody ProductRegisterRequest request) {
         Products saveProduct = productService.registerProduct(request);
@@ -97,5 +99,13 @@ public class ProductController {
         return ApiResponse.success("상품 판매중단 요청이 정상적으로 완료되었습니다.", response);
     }
 
+    @DeleteMapping("/{productId}")
+    public ApiResponse<ProductDeleteResponse> deleteProduct(
+        @PathVariable Long productId
+    ) {
+        Products deletedProduct = productService.deleteProduct(productId);
+        ProductDeleteResponse response = ProductDeleteResponse.from(deletedProduct);
+        return ApiResponse.success("상품이 삭제되었습니다.", response);
+    }
 
 }
