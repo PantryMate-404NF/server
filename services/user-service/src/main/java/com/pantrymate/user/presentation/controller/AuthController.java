@@ -47,6 +47,18 @@ public class AuthController {
     }
 
     @Operation(
+            summary = "소셜 로그인 시작",
+            description = "FE 로그인 버튼이 호출하는 엔드포인트. 카카오/네이버 인가 코드 요청 URL로 302 리다이렉트한다. "
+                    + "카카오/네이버 REST API 키는 서버에서만 사용하며 FE에는 노출되지 않는다.",
+            security = {})
+    @GetMapping("/api/auth/authorize/{provider}")
+    public ResponseEntity<Void> authorize(
+            @Parameter(description = "소셜 제공자", example = "kakao") @PathVariable String provider) {
+        String authorizeUrl = authService.getAuthorizeUrl(provider);
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(authorizeUrl)).build();
+    }
+
+    @Operation(
             summary = "소셜 로그인 및 간편 가입",
             description = "카카오/네이버 OAuth Redirect URI로 직접 등록되는 엔드포인트. "
                     + "인가코드 검증 후 로그인/자동가입 처리하고, Refresh Token을 HttpOnly 쿠키로 심어 FE 콜백으로 302 리다이렉트한다. "

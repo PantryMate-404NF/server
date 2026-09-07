@@ -6,5 +6,7 @@ public interface SocialOAuthClient {
 
     AuthProvider supports();
 
+    String buildAuthorizeUrl();
+
     SocialUserProfile fetchProfile(String authorizationCode);
 }

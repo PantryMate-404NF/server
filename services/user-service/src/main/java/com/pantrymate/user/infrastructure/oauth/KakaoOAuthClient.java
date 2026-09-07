@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class KakaoOAuthClient implements SocialOAuthClient {
@@ -36,6 +37,16 @@ public class KakaoOAuthClient implements SocialOAuthClient {
     @Override
     public AuthProvider supports() {
         return AuthProvider.KAKAO;
+    }
+
+    @Override
+    public String buildAuthorizeUrl() {
+        return UriComponentsBuilder.fromUriString("https://kauth.kakao.com/oauth/authorize")
+                .queryParam("response_type", "code")
+                .queryParam("client_id", clientId)
+                .queryParam("redirect_uri", redirectUri)
+                .build()
+                .toUriString();
     }
 
     @Override

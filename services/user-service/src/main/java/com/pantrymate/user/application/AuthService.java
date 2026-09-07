@@ -35,6 +35,10 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
+    public String getAuthorizeUrl(String provider) {
+        return oauthClientResolver.resolve(provider).buildAuthorizeUrl();
+    }
+
     @Transactional
     public LoginResult login(String provider, String authorizationCode) {
         SocialOAuthClient client = oauthClientResolver.resolve(provider);

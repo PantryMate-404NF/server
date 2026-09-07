@@ -41,3 +41,6 @@ bin/
 CLAUDE.md
 /docs/
 /agent/
+
+### Personal Local Test Tools ###
+/test-tool/
