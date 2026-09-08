@@ -77,6 +77,7 @@ REDIS_PORT=6379
 | 장바구니 (Cart) | 담기·조회·수량변경·삭제 | 
 | 주문 (Order) | 주문서 작성, 목록/상세 조회, 취소 요청 | 
 | 결제 (Payment) | 결제 생성·승인·취소/환불, 상태 재조회 | 
+| 팬트리 (Pantry) | 레시피, 식재료 관련 |
 
 ## 🤝 기여 방법 및 규칙
 
@@ -97,3 +98,5 @@ REDIS_PORT=6379
 | 문서 분류 | 설명 |
 | --- | --- |
 ex) | 프로젝트 기획서 | AI Pantry 기획안 및 요구사항 명세서 |
+| ERD | https://www.erdcloud.com/d/kieJyghb87dTdMZeR |
+

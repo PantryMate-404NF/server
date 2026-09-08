@@ -6,11 +6,30 @@ spring:
       server:
         webflux:
           routes:
-            - id: user-service
+            - id: user-service-auth
               # k8s Service DNS로 직접 라우팅 (Eureka 등 별도 디스커버리 불필요)
+              # TODO: 추후해결 - gateway↔user-service 클러스터 내부 통신 HTTPS/mTLS 적용 (MVP 이후)
+              uri: http://user-service.default.svc.cluster.local:8080
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                # 다운스트림은 X-User-Id만 신뢰하고 토큰을 재검증하지 않으므로 원본 Authorization은 제거
+                - RemoveRequestHeader=Authorization
+            - id: user-service-users
               uri: http://user-service.default.svc.cluster.local:8080
               predicates:
                 - Path=/api/users/**
+              filters:
+                - RemoveRequestHeader=Authorization
+
+# user-service와 반드시 동일해야 하는 JWT 서명 공유 시크릿 (HS256, 최소 32byte)
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+
+app:
+  # credentials:'include' 쿠키 요청을 허용할 FE Origin (와일드카드 불가)
+  frontend-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
 
 management:
   endpoints:
