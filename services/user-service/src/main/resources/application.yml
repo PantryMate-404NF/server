@@ -19,7 +19,7 @@ spring:
 # gateway-service의 security.jwt.secret과 반드시 동일해야 한다 (HS256, 최소 32byte)
 security:
   jwt:
-    secret: ${JWT_SECRET:dev-only-shared-secret-please-change-me-32bytes}
+    secret: ${JWT_SECRET}
     access-token-expiry-seconds: ${JWT_ACCESS_EXPIRY_SECONDS:1800}
     refresh-token-expiry-seconds: ${JWT_REFRESH_EXPIRY_SECONDS:1209600}
 

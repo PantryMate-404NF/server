@@ -35,8 +35,8 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    public String getAuthorizeUrl(String provider) {
-        return oauthClientResolver.resolve(provider).buildAuthorizeUrl();
+    public String getAuthorizeUrl(String provider, String state) {
+        return oauthClientResolver.resolve(provider).buildAuthorizeUrl(state);
     }
 
     @Transactional
@@ -65,6 +65,8 @@ public class AuthService {
                 .find(userId)
                 .orElseThrow(() -> new BusinessException(UserErrorCode.AUTH_EXPIRED_TOKEN));
 
+        // TODO: 추후해결 - find와 save 사이 TOCTOU 레이스 존재. 동시 재발급 요청 시 탐지 실패/세션 덮어쓰기 가능.
+        // Redis Lua script(또는 WATCH/MULTI) 기반 compare-and-set으로 원자화 필요 (MVP 이후).
         if (!storedToken.equals(refreshToken)) {
             // 저장된 토큰과 다른 토큰이 재사용됨 = 탈취 의심. 해당 유저의 세션을 전부 무효화한다.
             refreshTokenRepository.delete(userId);
@@ -90,6 +92,8 @@ public class AuthService {
         }
     }
 
+    // TODO: 추후해결 - 동일 소셜 계정 동시 최초 로그인 시 UNIQUE(provider, provider_id) 충돌 가능.
+    // Postgres 특성상 같은 트랜잭션에서 catch 후 재조회 불가 -> REQUIRES_NEW 분리(self-injection 또는 별도 컴포넌트) 필요 (MVP 이후).
     private User getOrCreateUser(AuthProvider provider, SocialUserProfile profile) {
         return userRepository
                 .findByProviderAndProviderId(provider, profile.providerId())

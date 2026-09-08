@@ -40,11 +40,12 @@ public class KakaoOAuthClient implements SocialOAuthClient {
     }
 
     @Override
-    public String buildAuthorizeUrl() {
+    public String buildAuthorizeUrl(String state) {
         return UriComponentsBuilder.fromUriString("https://kauth.kakao.com/oauth/authorize")
                 .queryParam("response_type", "code")
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", redirectUri)
+                .queryParam("state", state)
                 .build()
                 .toUriString();
     }

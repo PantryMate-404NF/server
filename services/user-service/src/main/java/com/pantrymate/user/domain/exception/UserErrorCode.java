@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 public enum UserErrorCode implements ErrorCode {
     AUTH_INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH-INVALID-PROVIDER", "지원하지 않는 소셜 로그인 제공자입니다."),
     AUTH_INVALID_AUTH_CODE(HttpStatus.BAD_REQUEST, "AUTH-INVALID-AUTH-CODE", "소셜 인가 코드가 유효하지 않습니다."),
+    AUTH_INVALID_STATE(HttpStatus.BAD_REQUEST, "AUTH-INVALID-STATE", "잘못된 요청이거나 세션이 만료되었습니다."),
     AUTH_OAUTH_COMMUNICATION_ERROR(
             HttpStatus.SERVICE_UNAVAILABLE, "AUTH-OAUTH-COMMUNICATION-ERROR", "소셜 인증 서버와의 통신 중 오류가 발생했습니다."),
     AUTH_MISSING_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH-MISSING-TOKEN", "로그인이 필요합니다."),

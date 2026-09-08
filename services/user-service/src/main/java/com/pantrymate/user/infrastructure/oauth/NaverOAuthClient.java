@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import java.util.UUID;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
@@ -38,13 +37,13 @@ public class NaverOAuthClient implements SocialOAuthClient {
     }
 
     @Override
-    public String buildAuthorizeUrl() {
-        // 네이버는 카카오와 달리 state가 필수 파라미터다. 콜백에서 별도 대조는 하지 않고 요청 규격만 맞춘다.
+    public String buildAuthorizeUrl(String state) {
+        // 네이버는 카카오와 달리 state가 필수 파라미터다. AuthController가 발급한 CSRF 방지용 state를 그대로 전달한다.
         return UriComponentsBuilder.fromUriString("https://nid.naver.com/oauth2.0/authorize")
                 .queryParam("response_type", "code")
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", redirectUri)
-                .queryParam("state", UUID.randomUUID().toString())
+                .queryParam("state", state)
                 .build()
                 .toUriString();
     }
