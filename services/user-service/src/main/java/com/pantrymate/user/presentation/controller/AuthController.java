@@ -10,6 +10,7 @@ import com.pantrymate.user.infrastructure.jwt.JwtProvider;
 import com.pantrymate.user.presentation.dto.ReissueResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
@@ -51,17 +52,23 @@ public class AuthController {
 
     @Operation(
             summary = "소셜 로그인 시작",
-            description = "FE 로그인 버튼 클릭 시 fetch가 아닌 페이지 이동(window.location)으로 호출. "
+            description = "FE 로그인 버튼 클릭 시 fetch가 아닌 페이지 이동으로 호출. "
                     + "CSRF 방지용 state를 HttpOnly 쿠키로 발급하고 카카오/네이버 동의 화면으로 302 리다이렉트한다. "
                     + "provider가 유효하지 않으면 '{frontend-callback-url}?error=AUTH-INVALID-PROVIDER'로 리다이렉트한다.",
             security = {})
     @io.swagger.v3.oas.annotations.responses.ApiResponses(
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "302",
-                    description = "성공: 카카오/네이버 인가 동의 화면으로 리다이렉트. 실패: FE 콜백 URL로 ?error=코드 리다이렉트"))
+                    description = "성공: 카카오/네이버 인가 동의 화면으로 리다이렉트. "
+                            + "실패: FE 콜백 URL로 '?error=AUTH-INVALID-PROVIDER' 리다이렉트"))
     @GetMapping("/api/auth/authorize/{provider}")
     public ResponseEntity<Void> authorize(
-            @Parameter(description = "소셜 제공자", example = "kakao") @PathVariable String provider) {
+            @Parameter(
+                            description = "소셜 제공자",
+                            example = "kakao",
+                            schema = @Schema(allowableValues = {"kakao", "naver"}))
+                    @PathVariable
+                    String provider) {
         try {
             String state = UUID.randomUUID().toString();
             String authorizeUrl = authService.getAuthorizeUrl(provider, state);
@@ -88,10 +95,18 @@ public class AuthController {
             security = {})
     @io.swagger.v3.oas.annotations.responses.ApiResponses(
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "302", description = "FE 콜백 URL로 리다이렉트 (성공: ?result=success, 실패: ?error=코드)"))
+                    responseCode = "302",
+                    description = "FE 콜백 URL로 리다이렉트. 성공: '?result=success'. 실패: '?error=코드' — "
+                            + "가능한 코드는 AUTH-INVALID-PROVIDER / AUTH-INVALID-AUTH-CODE / AUTH-INVALID-STATE / "
+                            + "AUTH-OAUTH-COMMUNICATION-ERROR 4가지로 고정."))
     @GetMapping("/api/auth/login/{provider}")
     public ResponseEntity<Void> login(
-            @Parameter(description = "소셜 제공자", example = "kakao") @PathVariable String provider,
+            @Parameter(
+                            description = "소셜 제공자",
+                            example = "kakao",
+                            schema = @Schema(allowableValues = {"kakao", "naver"}))
+                    @PathVariable
+                    String provider,
             @Parameter(description = "소셜 서버가 전달하는 OAuth2 인가 코드")
                     @RequestParam(value = "code", required = false) String code,
             @Parameter(description = "소셜 서버가 그대로 반환하는 CSRF 방지용 state")
