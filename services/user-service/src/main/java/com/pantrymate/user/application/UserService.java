@@ -42,6 +42,15 @@ public class UserService {
         return UserProfileResponseDto.of(user, onboardingCompleted);
     }
 
+    @Transactional(readOnly = true)
+    public UserPreferenceResponseDto getPreferences(Long userId) {
+        getUserByIdOrThrow(userId);
+        UserPreference preference = userPreferenceRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(UserErrorCode.ONBOARD_NOTFOUND_PREFERENCE));
+        return UserPreferenceResponseDto.from(preference);
+    }
+
     @Transactional
     public UserPreferenceResponseDto savePreferences(Long userId, UserPreferenceUpdateRequestDto request) {
         getUserByIdOrThrow(userId);

@@ -32,7 +32,11 @@ public class UserController {
     @Operation(summary = "내 프로필 조회", description = "로그인된 유저의 기본 회원 정보와 온보딩 완료 여부를 조회한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "Bearer 토큰 누락/무효 — API Gateway 단에서 차단되어 이 서비스까지 도달하지 않고, "
+                        + "공통 응답 규격이 아닌 Gateway의 기본 401(바디 없음)이 내려간다. "
+                        + "AUTH-UNAUTHORIZED는 X-User-Id 헤더 없이 이 서비스가 직접 호출된 경우에만 발생하는 내부 폴백 코드."),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER-NOTFOUND-ID")
     })
     @GetMapping
@@ -40,6 +44,28 @@ public class UserController {
             @Parameter(hidden = true) CurrentUser currentUser) {
         UserProfileResponseDto profile = userService.getProfile(currentUser.userId());
         return ResponseEntity.ok(ApiResponse.success("프로필 조회가 완료되었습니다.", profile));
+    }
+
+    @Operation(
+            summary = "개인화 온보딩 설정 조회",
+            description = "저장된 개인화 온보딩 설정과 마지막 진행 단계를 조회한다. "
+                    + "온보딩 중 건너뛰기/강제종료로 이탈한 사용자가 마이페이지에서 재진입할 때, 반환된 onboardingStep부터 이어서 진행한다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "Bearer 토큰 누락/무효 — API Gateway 단에서 차단되어 이 서비스까지 도달하지 않고, "
+                        + "공통 응답 규격이 아닌 Gateway의 기본 401(바디 없음)이 내려간다. "
+                        + "AUTH-UNAUTHORIZED는 X-User-Id 헤더 없이 이 서비스가 직접 호출된 경우에만 발생하는 내부 폴백 코드."),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "USER-NOTFOUND-ID / ONBOARD-NOTFOUND-PREFERENCE — 저장된 온보딩 설정이 없음(온보딩을 시작조차 하지 않은 사용자)")
+    })
+    @GetMapping("/preferences")
+    public ResponseEntity<ApiResponse<UserPreferenceResponseDto>> getPreferences(
+            @Parameter(hidden = true) CurrentUser currentUser) {
+        UserPreferenceResponseDto response = userService.getPreferences(currentUser.userId());
+        return ResponseEntity.ok(ApiResponse.success("개인화 온보딩 설정 조회가 완료되었습니다.", response));
     }
 
     @Operation(
@@ -52,7 +78,11 @@ public class UserController {
                 responseCode = "400",
                 description = "ONBOARD-INVALID-INPUT — familyMemberCount(1~20)/onboardingStep(1 이상) 누락 또는 범위 초과, "
                         + "preferredFoodTypes 허용값 외 값·중복·5개 초과, allergies 중복·20개 초과"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "Bearer 토큰 누락/무효 — API Gateway 단에서 차단되어 이 서비스까지 도달하지 않고, "
+                        + "공통 응답 규격이 아닌 Gateway의 기본 401(바디 없음)이 내려간다. "
+                        + "AUTH-UNAUTHORIZED는 X-User-Id 헤더 없이 이 서비스가 직접 호출된 경우에만 발생하는 내부 폴백 코드."),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER-NOTFOUND-ID")
     })
     @PutMapping("/preferences")
