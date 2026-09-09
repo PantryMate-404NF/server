@@ -1,3 +1,6 @@
+server:
+  port: ${SERVER_PORT:8081}
+
 spring:
   application:
     name: user-service
@@ -27,8 +30,9 @@ oauth:
   kakao:
     client-id: ${KAKAO_CLIENT_ID:}
     client-secret: ${KAKAO_CLIENT_SECRET:}
-    # 카카오 개발자 콘솔에 등록할 Redirect URI. 로컬에서 게이트웨이 없이 직접 테스트할 경우
-    # user-service 포트(8080)로, 게이트웨이 경유 시 게이트웨이 주소로 등록한다.
+    # 카카오 개발자 콘솔에 등록된 Redirect URI. 게이트웨이 주소(8080, 포트 컨벤션은
+    # docs/architecture/04_backend_msa_architecture.md 참고)로 등록하며, 게이트웨이가 /api/auth/**를
+    # user-service(8081)로 프록시한다. user-service 없이 직접 테스트하려면 이 값을 8081로 오버라이드한다.
     redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/auth/login/kakao}
   naver:
     client-id: ${NAVER_CLIENT_ID:}
