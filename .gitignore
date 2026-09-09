@@ -36,3 +36,11 @@ bin/
 
 ### Claude ###
 .claude_note
+
+### AI agent reference / planning docs (local-only) ###
+CLAUDE.md
+/docs/
+/agent/
+
+### Personal Local Test Tools ###
+/test-tool/

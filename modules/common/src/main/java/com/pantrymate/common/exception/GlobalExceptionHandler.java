@@ -1,12 +1,12 @@
 package com.pantrymate.common.exception;
 
 import com.pantrymate.common.dto.ApiResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -14,9 +14,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
-        return ResponseEntity
-            .status(errorCode.getStatus())
-            .body(ApiResponse.error(errorCode));
+        return ResponseEntity.status(errorCode.getStatus()).body(ApiResponse.error(errorCode));
+    }
+
+    // 존재하지 않는 URL 요청 - 스캐너/오타로 흔히 발생하며 서버 오류가 아니므로 500이 아닌 404로 응답한다.
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException e) {
+        return ResponseEntity.status(CommonErrorCode.ENTITY_NOT_FOUND.getStatus())
+                .body(ApiResponse.error(CommonErrorCode.ENTITY_NOT_FOUND));
     }
 
     // ****codeRabbit이 알려준 문제점에 대한 보완.****//
@@ -45,8 +50,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
-        return ResponseEntity
-            .status(CommonErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-            .body(ApiResponse.error(CommonErrorCode.INTERNAL_SERVER_ERROR));
+        log.error("처리되지 않은 예외 발생", e);
+        return ResponseEntity.status(CommonErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ApiResponse.error(CommonErrorCode.INTERNAL_SERVER_ERROR));
     }
 }
