@@ -133,6 +133,13 @@ public class AuthController {
             description = "HttpOnly refreshToken 쿠키를 검증해 Access Token을 새로 발급한다. "
                     + "Refresh Token Rotation(RTR) 적용 - 호출 시마다 Refresh Token도 새로 발급되어 쿠키가 갱신된다.",
             security = {})
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "재발급 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "AUTH-MISSING-TOKEN(쿠키 없음) / AUTH-EXPIRED-TOKEN(만료) / AUTH-INVALID-TOKEN(위조·재사용 탐지)"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER-NOTFOUND-ID")
+    })
     @PostMapping("/api/auth/reissue")
     public ResponseEntity<ApiResponse<ReissueResponseDto>> reissue(
             @Parameter(hidden = true) @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
@@ -147,6 +154,13 @@ public class AuthController {
             summary = "로그아웃",
             description = "Redis에 저장된 Refresh Token을 삭제하고 refreshToken 쿠키를 만료시킨다. Bearer Access Token 필요.")
     @SecurityRequirement(name = "bearerAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200", description = "항상 성공 처리 (이미 만료/위조된 토큰이어도 조용히 무시)"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "Authorization 헤더 누락/무효 — 게이트웨이 단에서 이 서비스에 도달하기 전에 차단됨")
+    })
     @PostMapping("/api/auth/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @Parameter(hidden = true) @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {

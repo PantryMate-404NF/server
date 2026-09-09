@@ -9,11 +9,20 @@ import com.pantrymate.user.domain.exception.UserErrorCode;
 import com.pantrymate.user.presentation.dto.UserPreferenceResponseDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceUpdateRequestDto;
 import com.pantrymate.user.presentation.dto.UserProfileResponseDto;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
+
+    private static final int MAX_FAMILY_MEMBER_COUNT = 20;
+    private static final int MAX_PREFERRED_FOOD_TYPES = 5;
+    private static final int MAX_ALLERGIES = 20;
+    private static final Set<String> ALLOWED_PREFERRED_FOOD_TYPES =
+            Set.of("KOREAN", "WESTERN", "JAPANESE", "CHINESE", "ETC");
 
     private final UserRepository userRepository;
     private final UserPreferenceRepository userPreferenceRepository;
@@ -55,8 +64,32 @@ public class UserService {
     private void validate(UserPreferenceUpdateRequestDto request) {
         if (request.familyMemberCount() == null
                 || request.familyMemberCount() < 1
+                || request.familyMemberCount() > MAX_FAMILY_MEMBER_COUNT
                 || request.onboardingCompleted() == null
-                || request.onboardingStep() == null) {
+                || request.onboardingStep() == null
+                || request.onboardingStep() < 1) {
+            throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
+        }
+        validatePreferredFoodTypes(request.preferredFoodTypes());
+        validateAllergies(request.allergies());
+    }
+
+    private void validatePreferredFoodTypes(List<String> preferredFoodTypes) {
+        if (preferredFoodTypes == null) {
+            return;
+        }
+        if (preferredFoodTypes.size() > MAX_PREFERRED_FOOD_TYPES
+                || !ALLOWED_PREFERRED_FOOD_TYPES.containsAll(preferredFoodTypes)
+                || new HashSet<>(preferredFoodTypes).size() != preferredFoodTypes.size()) {
+            throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
+        }
+    }
+
+    private void validateAllergies(List<String> allergies) {
+        if (allergies == null) {
+            return;
+        }
+        if (allergies.size() > MAX_ALLERGIES || new HashSet<>(allergies).size() != allergies.size()) {
             throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
         }
     }

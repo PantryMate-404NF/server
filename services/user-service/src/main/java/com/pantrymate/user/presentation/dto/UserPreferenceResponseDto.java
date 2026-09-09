@@ -1,23 +1,24 @@
 package com.pantrymate.user.presentation.dto;
 
 import com.pantrymate.user.domain.UserPreference;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 public record UserPreferenceResponseDto(
-        Long preferenceId,
-        Long userId,
+        String preferenceId,
+        String userId,
         Integer familyMemberCount,
-        List<String> preferredFoodTypes,
-        List<String> allergies,
+        @Schema(description = "온보딩 전이거나 값을 저장한 적 없으면 null", nullable = true) List<String> preferredFoodTypes,
+        @Schema(description = "온보딩 전이거나 값을 저장한 적 없으면 null", nullable = true) List<String> allergies,
         boolean onboardingCompleted,
         Integer onboardingStep,
         OffsetDateTime updatedAt) {
 
     public static UserPreferenceResponseDto from(UserPreference preference) {
         return new UserPreferenceResponseDto(
-                preference.getPreferenceId(),
-                preference.getUserId(),
+                String.valueOf(preference.getPreferenceId()),
+                String.valueOf(preference.getUserId()),
                 preference.getFamilyMemberCount(),
                 preference.getPreferredFoodTypes(),
                 preference.getAllergies(),
