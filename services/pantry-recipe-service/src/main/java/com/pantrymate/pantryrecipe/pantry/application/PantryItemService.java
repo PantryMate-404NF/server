@@ -9,6 +9,7 @@ import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemCreateReque
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemResponseDto;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,18 @@ public class PantryItemService {
                 PantryItem.createManual(userId, name, request.imageUrl(), storageType, expiryDate, expiryAutoCalculated);
         PantryItem saved = pantryItemRepository.save(pantryItem);
         return PantryItemResponseDto.from(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PantryItemResponseDto> getAll(Long userId, String rawStorageType) {
+        List<PantryItem> items;
+        if (rawStorageType != null && !rawStorageType.isBlank()) {
+            StorageType storageType = validateStorageType(rawStorageType);
+            items = pantryItemRepository.findByUserIdAndStorageTypeOrderByCreatedAtDesc(userId, storageType);
+        } else {
+            items = pantryItemRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        }
+        return items.stream().map(PantryItemResponseDto::from).toList();
     }
 
     private String validateName(String rawName) {
