@@ -41,6 +41,19 @@ public class UserPreference {
     @Column(columnDefinition = "jsonb")
     private List<String> allergies;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "favorite_foods", columnDefinition = "jsonb")
+    private List<String> favoriteFoods;
+
+    @Column(name = "taste_salty")
+    private Integer tasteSalty;
+
+    @Column(name = "taste_sweet")
+    private Integer tasteSweet;
+
+    @Column(name = "taste_spicy")
+    private Integer tasteSpicy;
+
     @Column(name = "onboarding_completed", nullable = false)
     private boolean onboardingCompleted;
 
@@ -65,11 +78,19 @@ public class UserPreference {
             Integer familyMemberCount,
             List<String> preferredFoodTypes,
             List<String> allergies,
+            List<String> favoriteFoods,
+            Integer tasteSalty,
+            Integer tasteSweet,
+            Integer tasteSpicy,
             boolean onboardingCompleted,
             Integer onboardingStep) {
         this.familyMemberCount = familyMemberCount;
         this.preferredFoodTypes = preferredFoodTypes;
         this.allergies = allergies;
+        this.favoriteFoods = favoriteFoods;
+        this.tasteSalty = tasteSalty;
+        this.tasteSweet = tasteSweet;
+        this.tasteSpicy = tasteSpicy;
         this.onboardingCompleted = onboardingCompleted;
         this.onboardingStep = onboardingStep;
     }
