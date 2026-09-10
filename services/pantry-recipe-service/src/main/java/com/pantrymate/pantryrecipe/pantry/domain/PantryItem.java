@@ -93,4 +93,23 @@ public class PantryItem {
     void preUpdate() {
         this.updatedAt = OffsetDateTime.now();
     }
+
+    public static PantryItem createManual(
+            Long userId,
+            String name,
+            String imageUrl,
+            StorageType storageType,
+            LocalDate expiryDate,
+            boolean expiryAutoCalculated) {
+        PantryItem pantryItem = new PantryItem();
+        pantryItem.userId = userId;
+        pantryItem.name = name;
+        pantryItem.imageUrl = imageUrl;
+        pantryItem.storageType = storageType;
+        pantryItem.expiryDate = expiryDate;
+        pantryItem.expiryAutoCalculated = expiryAutoCalculated;
+        pantryItem.cookable = true;
+        pantryItem.registerType = PantryRegisterType.MANUAL;
+        return pantryItem;
+    }
 }
