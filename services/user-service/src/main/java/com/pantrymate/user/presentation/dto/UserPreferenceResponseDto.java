@@ -17,17 +17,27 @@ public record UserPreferenceResponseDto(
                 List<String> preferredFoodTypes,
         @Schema(description = "온보딩 전이거나 값을 저장한 적 없으면 null", example = "[\"갑각류\", \"견과류\"]", nullable = true)
                 List<String> allergies,
+        @Schema(description = "온보딩 전이거나 값을 저장한 적 없으면 null", example = "[\"김치찌개\"]", nullable = true)
+                List<String> favoriteFoods,
+        @Schema(description = "온보딩 전이거나 값을 저장한 적 없으면 null", nullable = true) TastePreferenceDto tastePreferences,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean onboardingCompleted,
         @Schema(example = "2", requiredMode = Schema.RequiredMode.REQUIRED) Integer onboardingStep,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) OffsetDateTime updatedAt) {
 
     public static UserPreferenceResponseDto from(UserPreference preference) {
+        TastePreferenceDto tastePreferences =
+                preference.getTasteSalty() == null && preference.getTasteSweet() == null && preference.getTasteSpicy() == null
+                        ? null
+                        : new TastePreferenceDto(
+                                preference.getTasteSalty(), preference.getTasteSweet(), preference.getTasteSpicy());
         return new UserPreferenceResponseDto(
                 String.valueOf(preference.getPreferenceId()),
                 String.valueOf(preference.getUserId()),
                 preference.getFamilyMemberCount(),
                 preference.getPreferredFoodTypes(),
                 preference.getAllergies(),
+                preference.getFavoriteFoods(),
+                tastePreferences,
                 preference.isOnboardingCompleted(),
                 preference.getOnboardingStep(),
                 preference.getUpdatedAt());

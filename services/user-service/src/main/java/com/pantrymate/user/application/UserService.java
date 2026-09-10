@@ -6,6 +6,7 @@ import com.pantrymate.user.domain.UserPreference;
 import com.pantrymate.user.domain.UserPreferenceRepository;
 import com.pantrymate.user.domain.UserRepository;
 import com.pantrymate.user.domain.exception.UserErrorCode;
+import com.pantrymate.user.presentation.dto.TastePreferenceDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceResponseDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceUpdateRequestDto;
 import com.pantrymate.user.presentation.dto.UserProfileResponseDto;
@@ -21,6 +22,10 @@ public class UserService {
     private static final int MAX_FAMILY_MEMBER_COUNT = 20;
     private static final int MAX_PREFERRED_FOOD_TYPES = 5;
     private static final int MAX_ALLERGIES = 20;
+    private static final int MIN_FAVORITE_FOODS = 3;
+    private static final int MAX_FAVORITE_FOODS = 10;
+    private static final int MIN_TASTE_LEVEL = 1;
+    private static final int MAX_TASTE_LEVEL = 5;
     private static final Set<String> ALLOWED_PREFERRED_FOOD_TYPES =
             Set.of("KOREAN", "WESTERN", "JAPANESE", "CHINESE", "ETC");
 
@@ -59,10 +64,15 @@ public class UserService {
         UserPreference preference =
                 userPreferenceRepository.findByUserId(userId).orElseGet(() -> UserPreference.createFor(userId));
 
+        TastePreferenceDto tastePreferences = request.tastePreferences();
         preference.update(
                 request.familyMemberCount(),
                 request.preferredFoodTypes(),
                 request.allergies(),
+                request.favoriteFoods(),
+                tastePreferences != null ? tastePreferences.salty() : null,
+                tastePreferences != null ? tastePreferences.sweet() : null,
+                tastePreferences != null ? tastePreferences.spicy() : null,
                 Boolean.TRUE.equals(request.onboardingCompleted()),
                 request.onboardingStep());
 
@@ -81,6 +91,8 @@ public class UserService {
         }
         validatePreferredFoodTypes(request.preferredFoodTypes());
         validateAllergies(request.allergies());
+        validateFavoriteFoods(request.favoriteFoods());
+        validateTastePreferences(request.tastePreferences());
     }
 
     private void validatePreferredFoodTypes(List<String> preferredFoodTypes) {
@@ -101,6 +113,32 @@ public class UserService {
         if (allergies.size() > MAX_ALLERGIES || new HashSet<>(allergies).size() != allergies.size()) {
             throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
         }
+    }
+
+    private void validateFavoriteFoods(List<String> favoriteFoods) {
+        if (favoriteFoods == null || favoriteFoods.isEmpty()) {
+            return;
+        }
+        if (favoriteFoods.size() < MIN_FAVORITE_FOODS
+                || favoriteFoods.size() > MAX_FAVORITE_FOODS
+                || new HashSet<>(favoriteFoods).size() != favoriteFoods.size()) {
+            throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
+        }
+    }
+
+    private void validateTastePreferences(TastePreferenceDto tastePreferences) {
+        if (tastePreferences == null) {
+            return;
+        }
+        if (!isValidTasteLevel(tastePreferences.salty())
+                || !isValidTasteLevel(tastePreferences.sweet())
+                || !isValidTasteLevel(tastePreferences.spicy())) {
+            throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
+        }
+    }
+
+    private boolean isValidTasteLevel(Integer level) {
+        return level != null && level >= MIN_TASTE_LEVEL && level <= MAX_TASTE_LEVEL;
     }
 
     private User getUserByIdOrThrow(Long userId) {

@@ -29,6 +29,20 @@ public record UserPreferenceUpdateRequestDto(
                         maxItems = 20,
                         uniqueItems = true)
                 List<String> allergies,
+        @ArraySchema(
+                        schema =
+                                @Schema(
+                                        description = "좋아하는 음식 (자유 텍스트). 최소 3개 이상 선택해야 하며, "
+                                                + "생략/null/빈 배열은 아직 이 단계에 도달하지 않은 것으로 보고 '값 없음'으로 저장됨",
+                                        example = "김치찌개"),
+                        minItems = 3,
+                        maxItems = 10,
+                        uniqueItems = true)
+                List<String> favoriteFoods,
+        @Schema(
+                        description = "짠맛/단맛/매운맛 선호도 (각 1~5단계). 생략/null이면 아직 이 단계에 도달하지 않은 것으로 보고 "
+                                + "'값 없음'으로 저장되며, 값을 보낼 경우 세 항목 모두 채워야 함")
+                TastePreferenceDto tastePreferences,
         @Schema(description = "온보딩 완료 여부", requiredMode = Schema.RequiredMode.REQUIRED) Boolean onboardingCompleted,
         @Schema(
                         description = "온보딩 진행 단계 (1부터 시작)",
