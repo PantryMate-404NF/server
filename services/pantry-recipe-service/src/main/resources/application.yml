@@ -14,6 +14,24 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+ai:
+  ocr:
+    base-url: ${AI_OCR_BASE_URL:http://ai-serving-svc:8000}
+    internal-api-key: ${AI_INTERNAL_API_KEY:pantrymate-internal-secret-key}
+    timeout-seconds: ${AI_OCR_TIMEOUT_SECONDS:30}
+  recommend:
+    base-url: ${AI_RECOMMEND_BASE_URL:http://ai-serving-svc:8000}
+    timeout-ms: ${AI_RECOMMEND_TIMEOUT_MS:1000}
+
+pantry:
+  expiry:
+    default-fallback-shelf-life-days: 7
+    default-fallback-extension-days: 3
 
 management:
   endpoints:

@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS ingredients (
     category VARCHAR(30),
     image_url VARCHAR(500),
     default_storage_type storage_type,
-    default_expiry_days INTEGER,
+    default_shelf_life_days INTEGER,
+    extended_consumption_days INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -23,7 +24,10 @@ CREATE TABLE IF NOT EXISTS pantry_items (
     name VARCHAR(50) NOT NULL,
     image_url VARCHAR(500),
     storage_type storage_type NOT NULL,
-    expiry_date DATE,
+    purchase_date DATE,
+    sell_by_date DATE,
+    expiry_date DATE NOT NULL,
+    is_expiry_auto_calculated BOOLEAN NOT NULL DEFAULT TRUE,
     is_cookable BOOLEAN NOT NULL DEFAULT TRUE,
     register_type pantry_register_type NOT NULL DEFAULT 'MANUAL',
     order_item_id BIGINT UNIQUE,

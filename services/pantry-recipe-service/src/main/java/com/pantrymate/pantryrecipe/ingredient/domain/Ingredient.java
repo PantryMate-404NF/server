@@ -42,8 +42,11 @@ public class Ingredient {
     @Column(name = "default_storage_type")
     private StorageType defaultStorageType;
 
-    @Column(name = "default_expiry_days")
-    private Integer defaultExpiryDays;
+    @Column(name = "default_shelf_life_days")
+    private Integer defaultShelfLifeDays;
+
+    @Column(name = "extended_consumption_days")
+    private Integer extendedConsumptionDays;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

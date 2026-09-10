@@ -186,10 +186,11 @@ public class AuthController {
                 .body(ApiResponse.success("로그아웃이 성공적으로 완료되었습니다.", null));
     }
 
+    //TODO: secure(true) 추후
     private ResponseCookie buildRefreshCookie(String value, long maxAgeSeconds) {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(maxAgeSeconds)
@@ -199,7 +200,7 @@ public class AuthController {
     private ResponseCookie buildStateCookie(String value, long maxAgeSeconds) {
         return ResponseCookie.from(OAUTH_STATE_COOKIE, value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("Lax")
                 .path("/api/auth")
                 .maxAge(maxAgeSeconds)

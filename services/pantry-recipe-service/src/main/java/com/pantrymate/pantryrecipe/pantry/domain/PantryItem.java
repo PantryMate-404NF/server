@@ -53,8 +53,17 @@ public class PantryItem {
     @Column(name = "storage_type", nullable = false)
     private StorageType storageType;
 
-    @Column(name = "expiry_date")
+    @Column(name = "purchase_date")
+    private LocalDate purchaseDate;
+
+    @Column(name = "sell_by_date")
+    private LocalDate sellByDate;
+
+    @Column(name = "expiry_date", nullable = false)
     private LocalDate expiryDate;
+
+    @Column(name = "is_expiry_auto_calculated", nullable = false)
+    private boolean expiryAutoCalculated;
 
     @Column(name = "is_cookable", nullable = false)
     private boolean cookable;
