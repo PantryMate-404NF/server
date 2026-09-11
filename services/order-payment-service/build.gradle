@@ -14,4 +14,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // 동기 통신을 위한 feign 의존성 추가
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+    // UUID v7 사용을 위한 라이브러리 추가
+    implementation 'com.github.f4b6a3:uuid-creator:5.3.7'
 }

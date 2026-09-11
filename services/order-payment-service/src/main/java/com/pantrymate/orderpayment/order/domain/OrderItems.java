@@ -38,4 +38,14 @@ public class OrderItems {
     @Column(nullable = false)
     private Integer quantity;
 
+    public static OrderItems create(Long orderId, Long productId, String productName, Long price, Integer quantity) {
+        return OrderItems.builder()
+            .orderId(orderId)
+            .productId(productId)
+            .productName(productName)
+            .price(price)
+            .quantity(quantity)
+            .build();
+    }
+
 }

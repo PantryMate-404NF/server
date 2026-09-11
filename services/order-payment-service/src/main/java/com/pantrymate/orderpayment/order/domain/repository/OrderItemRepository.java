@@ -7,6 +7,8 @@ public interface OrderItemRepository {
 
     OrderItems save(OrderItems orderItems);
 
+    <S extends OrderItems> List<S> saveAll(Iterable<S> items);
+
     List<OrderItems> findByOrderId(Long orderId);
 
 }

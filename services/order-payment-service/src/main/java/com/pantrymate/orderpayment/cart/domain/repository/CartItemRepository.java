@@ -8,6 +8,10 @@ import java.util.Optional;
 public interface CartItemRepository {
     CartItems save(CartItems cartItems);
 
+    void delete(CartItems cartItems);
+
+    List<CartItems> findAllById(Iterable<Long> itemId);
+
     Optional<CartItems> findById(Long id);
 
     List<CartItems> findByCartId(Long cartId);

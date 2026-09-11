@@ -1,5 +1,6 @@
 package com.pantrymate.orderpayment.order.domain;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.pantrymate.orderpayment.order.domain.enums.OrderStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -63,6 +64,20 @@ public class Orders {
 
     @Version
     private Long version;
+
+
+    public static Orders create(Long userId, String orderName, Long totalAmount, String idempotencyKey){
+        String orderId = "ORDER_" + UuidCreator.getTimeOrderedEpoch().toString().replace("-","");
+
+        return Orders.builder()
+            .orderId(orderId)
+            .idempotencyKey(idempotencyKey)
+            .userId(userId)
+            .orderName(orderName)
+            .totalAmount(totalAmount)
+            .status(OrderStatus.PENDING)
+            .build();
+    }
 
 
 }
