@@ -88,7 +88,7 @@ public class OrderService {
         if (item.size() == 1) {
             return firstProductName;
         } else {
-            return firstProductName + "외" + (item.size() - 1) + "건";
+            return firstProductName + " 외" + (item.size() - 1) + " 건";
         }
     }
 }
