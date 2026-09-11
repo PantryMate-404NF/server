@@ -7,7 +7,8 @@ public enum PantryErrorCode implements ErrorCode {
     PANTRY_INVALID_NAME(HttpStatus.BAD_REQUEST, "PANTRY-INVALID-NAME", "식재료명은 1자 이상 20자 이하여야 합니다."),
     PANTRY_INVALID_DATE(HttpStatus.BAD_REQUEST, "PANTRY-INVALID-DATE", "올바른 날짜 형식(YYYY-MM-DD)을 입력해주세요."),
     PANTRY_INVALID_STORAGE(
-            HttpStatus.BAD_REQUEST, "PANTRY-INVALID-STORAGE", "올바른 보관방법(REFRIGERATED, FROZEN, ROOM_TEMP)을 선택해주세요.");
+            HttpStatus.BAD_REQUEST, "PANTRY-INVALID-STORAGE", "올바른 보관방법(REFRIGERATED, FROZEN, ROOM_TEMP)을 선택해주세요."),
+    PANTRY_NOTFOUND_ITEM(HttpStatus.NOT_FOUND, "PANTRY-NOTFOUND-ITEM", "해당 팬트리 식재료를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

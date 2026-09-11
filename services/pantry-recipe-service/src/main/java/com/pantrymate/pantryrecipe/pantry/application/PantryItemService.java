@@ -54,6 +54,19 @@ public class PantryItemService {
         return items.stream().map(PantryItemResponseDto::from).toList();
     }
 
+    @Transactional
+    public void delete(Long userId, Long pantryItemId) {
+        PantryItem pantryItem = getByIdAndUserId(pantryItemId, userId);
+        pantryItemRepository.delete(pantryItem);
+    }
+
+    private PantryItem getByIdAndUserId(Long pantryItemId, Long userId) {
+        return pantryItemRepository
+                .findById(pantryItemId)
+                .filter(item -> item.getUserId().equals(userId))
+                .orElseThrow(() -> new BusinessException(PantryErrorCode.PANTRY_NOTFOUND_ITEM));
+    }
+
     private String validateName(String rawName) {
         if (rawName == null || rawName.isBlank() || rawName.length() > MAX_NAME_LENGTH) {
             throw new BusinessException(PantryErrorCode.PANTRY_INVALID_NAME);
