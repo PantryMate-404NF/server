@@ -25,6 +25,18 @@ spring:
                 - Path=/api/users/**
               filters:
                 - RemoveRequestHeader=Authorization
+            - id: pantry-recipe-service-pantry-items
+              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+              predicates:
+                - Path=/api/pantry-items/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: pantry-recipe-service-recipes
+              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+              predicates:
+                - Path=/api/recipes/**
+              filters:
+                - RemoveRequestHeader=Authorization
 
 # user-service와 반드시 동일해야 하는 JWT 서명 공유 시크릿 (HS256, 최소 32byte)
 security:
