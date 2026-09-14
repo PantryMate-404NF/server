@@ -14,7 +14,8 @@ public enum PaymentErrorCode implements ErrorCode {
     ORDER_ALREADY_PAID(HttpStatus.CONFLICT, "PAYMENT-003", "이미 결제가 완료된 주문입니다."),
     AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT-004", "결제 금액이 일치하지 않습니다."),
     TOSS_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "PAYMENT-005", "결제 처리 중 오류가 발생했습니다."),
-    STOCK_DEDUCTION_FAILED(HttpStatus.CONFLICT, "PAYMENT-006", "재고 처리 중 문제가 발생했습니다.");
+    STOCK_DEDUCTION_FAILED(HttpStatus.CONFLICT, "PAYMENT-006", "재고 처리 중 문제가 발생했습니다."),
+    PAYMENT_IN_PROGRESS(HttpStatus.CONFLICT, "PAYMENT-007", "이미 처리 중인 결제 요청입니다.");
 
     private final HttpStatus status;
     private final String code;

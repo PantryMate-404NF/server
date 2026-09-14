@@ -78,6 +78,10 @@ public class Orders {
             .status(OrderStatus.PENDING)
             .build();
     }
-
-
+    public void confirm(){
+        if (!this.status.canTransitionTo(OrderStatus.CONFIRMED)) {
+            throw new IllegalStateException("현재 상태에서 주문 완료로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.CONFIRMED;
+    }
 }
