@@ -2,6 +2,7 @@ package com.pantrymate.orderpayment.payment.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
+import com.pantrymate.orderpayment.payment.application.dto.PaymentCancelRequest;
 import com.pantrymate.orderpayment.payment.application.dto.PaymentConfirmRequest;
 import com.pantrymate.orderpayment.payment.application.dto.PaymentDetailResponse;
 import com.pantrymate.orderpayment.payment.application.dto.PaymentPrepareResponse;
@@ -53,4 +54,15 @@ public class PaymentController {
         Payments payment = paymentService.getPayments(currentUser.userId(), orderId);
         return ApiResponse.success("정상적으로 결제 조회가 완료되었습니다.", PaymentDetailResponse.from(payment));
     }
+    @PostMapping("/{orderId}/cancel")
+    public ApiResponse<PaymentDetailResponse> cancelPayment(
+        CurrentUser currentUser,
+        @PathVariable String orderId,
+        @Valid @RequestBody PaymentCancelRequest request
+    ){
+        Payments payment = paymentService.cancelPayment(currentUser.userId(), orderId,
+            request.cancelReason());
+        return ApiResponse.success("결제가 취소되었습니다.",  PaymentDetailResponse.from(payment));
+    }
+
 }

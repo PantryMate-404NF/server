@@ -66,8 +66,9 @@ public class Orders {
     private Long version;
 
 
-    public static Orders create(Long userId, String orderName, Long totalAmount, String idempotencyKey){
-        String orderId = "ORDER_" + UuidCreator.getTimeOrderedEpoch().toString().replace("-","");
+    public static Orders create(Long userId, String orderName, Long totalAmount,
+        String idempotencyKey) {
+        String orderId = "ORDER_" + UuidCreator.getTimeOrderedEpoch().toString().replace("-", "");
 
         return Orders.builder()
             .orderId(orderId)
@@ -78,10 +79,19 @@ public class Orders {
             .status(OrderStatus.PENDING)
             .build();
     }
-    public void confirm(){
+
+    public void confirm() {
         if (!this.status.canTransitionTo(OrderStatus.CONFIRMED)) {
             throw new IllegalStateException("현재 상태에서 주문 완료로 전환할 수 없습니다.");
         }
         this.status = OrderStatus.CONFIRMED;
     }
+
+    public void fail() {
+        if (!this.status.canTransitionTo(OrderStatus.FAILED)) {
+            throw new IllegalStateException("현재 상태에서 주문 실패로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.FAILED;
+    }
 }
+

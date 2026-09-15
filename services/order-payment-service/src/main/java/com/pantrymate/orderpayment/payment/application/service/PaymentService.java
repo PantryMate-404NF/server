@@ -5,6 +5,7 @@ import com.pantrymate.orderpayment.order.domain.Orders;
 import com.pantrymate.orderpayment.order.domain.exception.OrderErrorCode;
 import com.pantrymate.orderpayment.order.domain.repository.OrderRepository;
 import com.pantrymate.orderpayment.payment.application.dto.PaymentConfirmRequest;
+import com.pantrymate.orderpayment.payment.application.dto.TossCancelRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossConfirmRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossConfirmResponse;
 import com.pantrymate.orderpayment.payment.domain.Payments;
@@ -13,6 +14,7 @@ import com.pantrymate.orderpayment.payment.domain.exception.PaymentErrorCode;
 import com.pantrymate.orderpayment.payment.domain.repository.PaymentRepository;
 import com.pantrymate.orderpayment.payment.infrastructure.client.TossAuthorizationEncoding;
 import com.pantrymate.orderpayment.payment.infrastructure.client.TossPaymentClient;
+import feign.FeignException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -54,11 +56,18 @@ public class PaymentService {
             String authHeader = tossAuthorizationEncoding.createAuthorization();
             TossConfirmRequest tossConfirmRequest = new TossConfirmRequest(request.paymentKey(),
                 request.orderId(), request.amount());
-            TossConfirmResponse response = tossPaymentClient.confirmToss(authHeader,
-                tossConfirmRequest);
             Payments payment = paymentRepository.findByOrderIdAndStatusIn(
                     order.getId(), List.of(PaymentStatus.READY, PaymentStatus.IN_PROGRESS))
                 .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+            TossConfirmResponse response;
+            try {
+                response = tossPaymentClient.confirmToss(authHeader, tossConfirmRequest);
+            }catch (FeignException.BadRequest e){
+                payment.fail("FAILED", e.getMessage(), e.contentUTF8());
+                order.fail();
+                paymentRepository.save(payment);
+                throw new BusinessException(PaymentErrorCode.PAYMENT_FAILED);
+            }
             payment.approve(response.paymentKey(), response.method(), response.toString());
             order.confirm();
             return paymentRepository.save(payment);
@@ -95,5 +104,23 @@ public class PaymentService {
             .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
     }
+
+    @Transactional
+    public Payments cancelPayment(Long userId, String orderId, String cancelReason) {
+        Orders order = orderRepository.findByOrderId(orderId)
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
+        if(!order.getUserId().equals(userId)) {
+            throw new BusinessException(OrderErrorCode.ORDER_NOT_FOUND);
+        }
+
+        Payments payment = paymentRepository.findByOrderId(order.getId())
+            .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+        String authHeader = tossAuthorizationEncoding.createAuthorization();
+        TossCancelRequest request = new TossCancelRequest(cancelReason);
+        tossPaymentClient.cancelToss(authHeader, payment.getPaymentKey(), request);
+        payment.cancel();
+        return paymentRepository.save(payment);
+    }
+
 
 }

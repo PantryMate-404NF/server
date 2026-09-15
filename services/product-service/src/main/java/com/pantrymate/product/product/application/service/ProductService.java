@@ -11,6 +11,8 @@ import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
+import com.pantrymate.product.product.application.dto.StockDeductionItem;
+import com.pantrymate.product.product.application.dto.StockDeductionRequest;
 import com.pantrymate.product.product.domain.ProductImages;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
@@ -176,6 +178,20 @@ public class ProductService {
             .createdAt(now)
             .updatedAt(now)
             .build();
+    }
+
+    @Transactional
+    public void productDecreaseStocks(StockDeductionRequest request) {
+        request.items().forEach(item -> {
+            int updatedRows = productRepository.decreaseStockAtomic(item.productId(), item.quantity());
+            if (updatedRows == 0){
+                productRepository.findById(item.productId())
+                    .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+                throw new BusinessException(ProductErrorCode.INSUFFICIENT_STOCK);
+            }
+
+        });
     }
 
 
