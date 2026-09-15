@@ -40,4 +40,11 @@ public class CookingHistory {
     void prePersist() {
         this.cookedAt = OffsetDateTime.now();
     }
+
+    public static CookingHistory create(Long userId, Recipe recipe) {
+        CookingHistory history = new CookingHistory();
+        history.userId = userId;
+        history.recipe = recipe;
+        return history;
+    }
 }

@@ -2,8 +2,10 @@ package com.pantrymate.pantryrecipe.recipe.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
+import com.pantrymate.pantryrecipe.recipe.application.CookingHistoryService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeScrapService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeService;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingHistoryResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeDetailResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,10 +28,15 @@ public class RecipeController {
 
     private final RecipeService recipeService;
     private final RecipeScrapService recipeScrapService;
+    private final CookingHistoryService cookingHistoryService;
 
-    public RecipeController(RecipeService recipeService, RecipeScrapService recipeScrapService) {
+    public RecipeController(
+            RecipeService recipeService,
+            RecipeScrapService recipeScrapService,
+            CookingHistoryService cookingHistoryService) {
         this.recipeService = recipeService;
         this.recipeScrapService = recipeScrapService;
+        this.cookingHistoryService = cookingHistoryService;
     }
 
     @Operation(summary = "레시피 추천 목록 조회", description = "초기 버전은 개인화 없이 공개된 DB 기본/큐레이션 레시피를 반환한다.")
@@ -94,5 +101,21 @@ public class RecipeController {
             @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
         recipeScrapService.unscrap(currentUser.userId(), recipeId);
         return ResponseEntity.ok(ApiResponse.success("레시피 스크랩을 해제했습니다.", null));
+    }
+
+    @Operation(
+            summary = "레시피 조리 완료",
+            description = "조리 완료 이력을 저장한다. 식재료 정리 바텀시트에 쓰일 팬트리 매칭 대상 조회는 이후 버전에서 지원한다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조리 완료 처리 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RECIPE-NOTFOUND-ID")
+    })
+    @PostMapping("/{recipeId}/cook-complete")
+    public ResponseEntity<ApiResponse<CookingHistoryResponseDto>> cookComplete(
+            @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
+        CookingHistoryResponseDto response = cookingHistoryService.complete(currentUser.userId(), recipeId);
+        return ResponseEntity.ok(ApiResponse.success("조리 완료가 기록되었습니다.", response));
     }
 }
