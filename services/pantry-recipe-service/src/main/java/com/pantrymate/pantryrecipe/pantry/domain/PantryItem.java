@@ -112,4 +112,22 @@ public class PantryItem {
         pantryItem.registerType = PantryRegisterType.MANUAL;
         return pantryItem;
     }
+
+    public void updateManualFields(
+            String name, String imageUrl, StorageType storageType, LocalDate expiryDate, boolean expiryAutoCalculated) {
+        this.name = name;
+        this.imageUrl = imageUrl;
+        this.storageType = storageType;
+        this.expiryDate = expiryDate;
+        this.expiryAutoCalculated = expiryAutoCalculated;
+    }
+
+    public void updateExpiryDate(LocalDate expiryDate, boolean expiryAutoCalculated) {
+        this.expiryDate = expiryDate;
+        this.expiryAutoCalculated = expiryAutoCalculated;
+    }
+
+    public void updateCookable(boolean cookable) {
+        this.cookable = cookable;
+    }
 }

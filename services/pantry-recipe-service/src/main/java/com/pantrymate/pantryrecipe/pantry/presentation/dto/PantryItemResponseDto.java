@@ -14,6 +14,7 @@ public record PantryItemResponseDto(
         PantryExpiryStatus expiryStatus,
         StorageType storageType,
         boolean isExpiryAutoCalculated,
+        boolean isCookable,
         String registerType,
         String imageUrl) {
 
@@ -30,6 +31,7 @@ public record PantryItemResponseDto(
                 resolveExpiryStatus(dDay),
                 pantryItem.getStorageType(),
                 pantryItem.isExpiryAutoCalculated(),
+                pantryItem.isCookable(),
                 pantryItem.getRegisterType().getLabel(),
                 pantryItem.getImageUrl());
     }

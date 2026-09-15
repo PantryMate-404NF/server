@@ -5,6 +5,7 @@ import com.pantrymate.common.dto.CurrentUser;
 import com.pantrymate.pantryrecipe.pantry.application.PantryItemService;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemCreateRequestDto;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemResponseDto;
+import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemUpdateRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -67,6 +69,28 @@ public class PantryItemController {
                     String sort) {
         List<PantryItemResponseDto> response = pantryItemService.getAll(currentUser.userId(), storageType, sort);
         return ResponseEntity.ok(ApiResponse.success("팬트리 목록 조회가 완료되었습니다.", response));
+    }
+
+    @Operation(
+            summary = "팬트리 식재료 수정",
+            description = "수동 등록 항목은 식재료명·유통기한·보관방법·이미지·요리가능여부를 모두 수정할 수 있다. "
+                    + "자동 등록 항목은 식재료명·보관방법·이미지가 SKU에 연결되어 있어 수정되지 않고, 유통기한과 요리가능여부만 반영된다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "PANTRY-INVALID-NAME / PANTRY-INVALID-DATE / PANTRY-INVALID-STORAGE"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404", description = "PANTRY-NOTFOUND-ITEM")
+    })
+    @PatchMapping("/{pantryItemId}")
+    public ResponseEntity<ApiResponse<PantryItemResponseDto>> edit(
+            @Parameter(hidden = true) CurrentUser currentUser,
+            @PathVariable Long pantryItemId,
+            @RequestBody PantryItemUpdateRequestDto request) {
+        PantryItemResponseDto response = pantryItemService.update(currentUser.userId(), pantryItemId, request);
+        return ResponseEntity.ok(ApiResponse.success("팬트리 식재료가 수정되었습니다.", response));
     }
 
     @Operation(summary = "팬트리 식재료 단건 삭제", description = "본인 소유의 팬트리 식재료를 삭제한다.")

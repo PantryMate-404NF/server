@@ -4,10 +4,12 @@ import com.pantrymate.common.exception.BusinessException;
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItemRepository;
+import com.pantrymate.pantryrecipe.pantry.domain.enums.PantryRegisterType;
 import com.pantrymate.pantryrecipe.pantry.domain.enums.PantrySortType;
 import com.pantrymate.pantryrecipe.pantry.domain.exception.PantryErrorCode;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemCreateRequestDto;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemResponseDto;
+import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemUpdateRequestDto;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -61,6 +63,29 @@ public class PantryItemService {
                             : pantryItemRepository.findByUserIdAndStorageTypeOrderByImminent(userId, storageType);
                 };
         return items.stream().map(PantryItemResponseDto::from).toList();
+    }
+
+    @Transactional
+    public PantryItemResponseDto update(Long userId, Long pantryItemId, PantryItemUpdateRequestDto request) {
+        PantryItem pantryItem = getByIdAndUserId(pantryItemId, userId);
+
+        boolean expiryAutoCalculated = request.expiryDate() == null || request.expiryDate().isBlank();
+        LocalDate expiryDate = resolveExpiryDate(request.expiryDate(), expiryAutoCalculated);
+
+        if (pantryItem.getRegisterType() == PantryRegisterType.MANUAL) {
+            String name = validateName(request.ingredientName());
+            StorageType storageType = validateStorageType(request.storageType());
+            pantryItem.updateManualFields(name, request.imageUrl(), storageType, expiryDate, expiryAutoCalculated);
+        } else {
+            // 자사몰 연동(자동 등록) 식재료는 식재료명·보관방법·이미지가 SKU에 연결되어 있어 수정 대상에서 제외한다.
+            pantryItem.updateExpiryDate(expiryDate, expiryAutoCalculated);
+        }
+
+        if (request.cookable() != null) {
+            pantryItem.updateCookable(request.cookable());
+        }
+
+        return PantryItemResponseDto.from(pantryItem);
     }
 
     @Transactional
