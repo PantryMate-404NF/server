@@ -1,7 +1,7 @@
-package com.pantrymate.orderpayment.cart.infrastructure.client;
+package com.pantrymate.orderpayment.product.client;
 
 import com.pantrymate.common.dto.ApiResponse;
-import com.pantrymate.orderpayment.cart.application.dto.ProductInfoResponse;
+import com.pantrymate.orderpayment.product.dto.ProductInfoResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

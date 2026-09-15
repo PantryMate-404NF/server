@@ -1,11 +1,11 @@
 package com.pantrymate.orderpayment.order.application.service;
 
 import com.pantrymate.common.exception.BusinessException;
-import com.pantrymate.orderpayment.cart.application.dto.ProductInfoResponse;
 import com.pantrymate.orderpayment.cart.domain.CartItems;
 import com.pantrymate.orderpayment.cart.domain.repository.CartItemRepository;
-import com.pantrymate.orderpayment.cart.infrastructure.client.ProductServiceClient;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
+import com.pantrymate.orderpayment.product.client.ProductServiceClient;
+import com.pantrymate.orderpayment.product.dto.ProductInfoResponse;
 import com.pantrymate.orderpayment.order.domain.OrderItems;
 import com.pantrymate.orderpayment.order.domain.Orders;
 import com.pantrymate.orderpayment.order.domain.exception.OrderErrorCode;

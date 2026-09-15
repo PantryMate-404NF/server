@@ -1,6 +1,7 @@
 package com.pantrymate.orderpayment.cart.application.dto;
 
 import com.pantrymate.orderpayment.cart.domain.CartItems;
+import com.pantrymate.orderpayment.product.dto.ProductInfoResponse;
 
 public record CartItemResponse(
     Long cartItemId,

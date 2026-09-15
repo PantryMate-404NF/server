@@ -1,4 +1,4 @@
-package com.pantrymate.orderpayment.cart.application.dto;
+package com.pantrymate.orderpayment.product.dto;
 
 public record ProductInfoResponse(
     Long productId,
