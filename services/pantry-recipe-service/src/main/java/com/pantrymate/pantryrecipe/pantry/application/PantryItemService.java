@@ -4,6 +4,7 @@ import com.pantrymate.common.exception.BusinessException;
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItemRepository;
+import com.pantrymate.pantryrecipe.pantry.domain.enums.PantrySortType;
 import com.pantrymate.pantryrecipe.pantry.domain.exception.PantryErrorCode;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemCreateRequestDto;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemResponseDto;
@@ -43,14 +44,22 @@ public class PantryItemService {
     }
 
     @Transactional(readOnly = true)
-    public List<PantryItemResponseDto> getAll(Long userId, String rawStorageType) {
-        List<PantryItem> items;
-        if (rawStorageType != null && !rawStorageType.isBlank()) {
-            StorageType storageType = validateStorageType(rawStorageType);
-            items = pantryItemRepository.findByUserIdAndStorageTypeOrderByCreatedAtDesc(userId, storageType);
-        } else {
-            items = pantryItemRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        }
+    public List<PantryItemResponseDto> getAll(Long userId, String rawStorageType, String rawSort) {
+        StorageType storageType = rawStorageType == null || rawStorageType.isBlank() ? null : validateStorageType(rawStorageType);
+        PantrySortType sort = validateSort(rawSort);
+
+        List<PantryItem> items =
+                switch (sort) {
+                    case RECENT -> storageType == null
+                            ? pantryItemRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                            : pantryItemRepository.findByUserIdAndStorageTypeOrderByCreatedAtDesc(userId, storageType);
+                    case OLDEST -> storageType == null
+                            ? pantryItemRepository.findByUserIdOrderByCreatedAtAsc(userId)
+                            : pantryItemRepository.findByUserIdAndStorageTypeOrderByCreatedAtAsc(userId, storageType);
+                    case IMMINENT -> storageType == null
+                            ? pantryItemRepository.findByUserIdOrderByImminent(userId)
+                            : pantryItemRepository.findByUserIdAndStorageTypeOrderByImminent(userId, storageType);
+                };
         return items.stream().map(PantryItemResponseDto::from).toList();
     }
 
@@ -82,6 +91,17 @@ public class PantryItemService {
             return StorageType.valueOf(rawStorageType);
         } catch (IllegalArgumentException e) {
             throw new BusinessException(PantryErrorCode.PANTRY_INVALID_STORAGE);
+        }
+    }
+
+    private PantrySortType validateSort(String rawSort) {
+        if (rawSort == null || rawSort.isBlank()) {
+            return PantrySortType.RECENT;
+        }
+        try {
+            return PantrySortType.valueOf(rawSort);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(PantryErrorCode.PANTRY_INVALID_SORT);
         }
     }
 

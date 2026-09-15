@@ -49,11 +49,11 @@ public class PantryItemController {
                 .body(ApiResponse.success("팬트리에 식재료가 성공적으로 등록되었습니다.", response));
     }
 
-    @Operation(summary = "팬트리 식재료 목록 조회", description = "로그인한 유저의 팬트리 식재료를 최근 등록순으로 조회한다. 보관방법 필터링을 지원한다.")
+    @Operation(summary = "팬트리 식재료 목록 조회", description = "로그인한 유저의 팬트리 식재료를 조회한다. 보관방법 필터링과 정렬 기준 선택을 지원한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "400", description = "PANTRY-INVALID-STORAGE"),
+                responseCode = "400", description = "PANTRY-INVALID-STORAGE / PANTRY-INVALID-SORT"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED")
     })
     @GetMapping
@@ -61,8 +61,11 @@ public class PantryItemController {
             @Parameter(hidden = true) CurrentUser currentUser,
             @Parameter(description = "보관방법 필터 (REFRIGERATED / FROZEN / ROOM_TEMP)")
                     @RequestParam(required = false)
-                    String storageType) {
-        List<PantryItemResponseDto> response = pantryItemService.getAll(currentUser.userId(), storageType);
+                    String storageType,
+            @Parameter(description = "정렬 기준 (RECENT: 최근 등록순(기본값) / IMMINENT: 소비기한 임박순 / OLDEST: 오래된 등록순)")
+                    @RequestParam(required = false)
+                    String sort) {
+        List<PantryItemResponseDto> response = pantryItemService.getAll(currentUser.userId(), storageType, sort);
         return ResponseEntity.ok(ApiResponse.success("팬트리 목록 조회가 완료되었습니다.", response));
     }
 
