@@ -3,7 +3,6 @@ package com.pantrymate.pantryrecipe.pantry.presentation.dto;
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.enums.PantryExpiryStatus;
-import com.pantrymate.pantryrecipe.pantry.domain.enums.PantryRegisterType;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
@@ -15,22 +14,23 @@ public record PantryItemResponseDto(
         PantryExpiryStatus expiryStatus,
         StorageType storageType,
         boolean isExpiryAutoCalculated,
-        PantryRegisterType registerType,
+        String registerType,
         String imageUrl) {
 
     private static final long IMMINENT_THRESHOLD_DAYS = 3;
+    private static final int NAME_DISPLAY_MAX_LENGTH = 10;
 
     public static PantryItemResponseDto from(PantryItem pantryItem) {
         long dDay = ChronoUnit.DAYS.between(LocalDate.now(), pantryItem.getExpiryDate());
         return new PantryItemResponseDto(
                 pantryItem.getPantryItemId(),
-                pantryItem.getName(),
+                truncateName(pantryItem.getName()),
                 pantryItem.getExpiryDate(),
                 dDay,
                 resolveExpiryStatus(dDay),
                 pantryItem.getStorageType(),
                 pantryItem.isExpiryAutoCalculated(),
-                pantryItem.getRegisterType(),
+                pantryItem.getRegisterType().getLabel(),
                 pantryItem.getImageUrl());
     }
 
@@ -42,5 +42,12 @@ public record PantryItemResponseDto(
             return PantryExpiryStatus.IMMINENT;
         }
         return PantryExpiryStatus.NORMAL;
+    }
+
+    private static String truncateName(String name) {
+        if (name.length() <= NAME_DISPLAY_MAX_LENGTH) {
+            return name;
+        }
+        return name.substring(0, NAME_DISPLAY_MAX_LENGTH) + "…";
     }
 }
