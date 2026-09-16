@@ -24,23 +24,31 @@ public class PantryItemService {
 
     private final PantryItemRepository pantryItemRepository;
     private final int defaultFallbackExtensionDays;
+    private final int tempSellByToExpiryDays;
 
     public PantryItemService(
             PantryItemRepository pantryItemRepository,
-            @Value("${pantry.expiry.default-fallback-extension-days}") int defaultFallbackExtensionDays) {
+            @Value("${pantry.expiry.default-fallback-extension-days}") int defaultFallbackExtensionDays,
+            @Value("${pantry.expiry.temp-sell-by-to-expiry-days}") int tempSellByToExpiryDays) {
         this.pantryItemRepository = pantryItemRepository;
         this.defaultFallbackExtensionDays = defaultFallbackExtensionDays;
+        this.tempSellByToExpiryDays = tempSellByToExpiryDays;
     }
 
     @Transactional
     public PantryItemResponseDto save(Long userId, PantryItemCreateRequestDto request) {
         String name = validateName(request.ingredientName());
         StorageType storageType = validateStorageType(request.storageType());
-        boolean expiryAutoCalculated = request.expiryDate() == null || request.expiryDate().isBlank();
-        LocalDate expiryDate = resolveExpiryDate(request.expiryDate(), expiryAutoCalculated);
+        ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate());
 
-        PantryItem pantryItem =
-                PantryItem.createManual(userId, name, request.imageUrl(), storageType, expiryDate, expiryAutoCalculated);
+        PantryItem pantryItem = PantryItem.createManual(
+                userId,
+                name,
+                request.imageUrl(),
+                storageType,
+                resolved.sellByDate(),
+                resolved.expiryDate(),
+                resolved.autoCalculated());
         PantryItem saved = pantryItemRepository.save(pantryItem);
         return PantryItemResponseDto.from(saved);
     }
@@ -69,16 +77,21 @@ public class PantryItemService {
     public PantryItemResponseDto update(Long userId, Long pantryItemId, PantryItemUpdateRequestDto request) {
         PantryItem pantryItem = getByIdAndUserId(pantryItemId, userId);
 
-        boolean expiryAutoCalculated = request.expiryDate() == null || request.expiryDate().isBlank();
-        LocalDate expiryDate = resolveExpiryDate(request.expiryDate(), expiryAutoCalculated);
+        ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate());
 
         if (pantryItem.getRegisterType() == PantryRegisterType.MANUAL) {
             String name = validateName(request.ingredientName());
             StorageType storageType = validateStorageType(request.storageType());
-            pantryItem.updateManualFields(name, request.imageUrl(), storageType, expiryDate, expiryAutoCalculated);
+            pantryItem.updateManualFields(
+                    name,
+                    request.imageUrl(),
+                    storageType,
+                    resolved.sellByDate(),
+                    resolved.expiryDate(),
+                    resolved.autoCalculated());
         } else {
             // 자사몰 연동(자동 등록) 식재료는 식재료명·보관방법·이미지가 SKU에 연결되어 있어 수정 대상에서 제외한다.
-            pantryItem.updateExpiryDate(expiryDate, expiryAutoCalculated);
+            pantryItem.updateExpiryDate(resolved.sellByDate(), resolved.expiryDate(), resolved.autoCalculated());
         }
 
         if (request.cookable() != null) {
@@ -130,14 +143,26 @@ public class PantryItemService {
         }
     }
 
-    private LocalDate resolveExpiryDate(String rawExpiryDate, boolean expiryAutoCalculated) {
-        if (expiryAutoCalculated) {
-            return LocalDate.now().plusDays(defaultFallbackExtensionDays);
+    private ResolvedExpiry resolveExpiry(String rawExpiryDate, String rawSellByDate) {
+        if (rawExpiryDate != null && !rawExpiryDate.isBlank()) {
+            LocalDate sellByDate = rawSellByDate == null || rawSellByDate.isBlank() ? null : parseDate(rawSellByDate);
+            return new ResolvedExpiry(sellByDate, parseDate(rawExpiryDate), false);
         }
+        if (rawSellByDate != null && !rawSellByDate.isBlank()) {
+            LocalDate sellByDate = parseDate(rawSellByDate);
+            // TODO: Ingredient.extendedConsumptionDays로 식재료별 소비기한 연장일을 조회해 반영. 매칭 전까지는 임시로 고정일수만 더한다.
+            return new ResolvedExpiry(sellByDate, sellByDate.plusDays(tempSellByToExpiryDays), true);
+        }
+        return new ResolvedExpiry(null, LocalDate.now().plusDays(defaultFallbackExtensionDays), true);
+    }
+
+    private LocalDate parseDate(String rawDate) {
         try {
-            return LocalDate.parse(rawExpiryDate);
+            return LocalDate.parse(rawDate);
         } catch (DateTimeParseException e) {
             throw new BusinessException(PantryErrorCode.PANTRY_INVALID_DATE);
         }
     }
+
+    private record ResolvedExpiry(LocalDate sellByDate, LocalDate expiryDate, boolean autoCalculated) {}
 }

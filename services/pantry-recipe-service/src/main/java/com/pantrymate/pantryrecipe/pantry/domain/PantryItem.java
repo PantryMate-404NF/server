@@ -99,6 +99,7 @@ public class PantryItem {
             String name,
             String imageUrl,
             StorageType storageType,
+            LocalDate sellByDate,
             LocalDate expiryDate,
             boolean expiryAutoCalculated) {
         PantryItem pantryItem = new PantryItem();
@@ -106,6 +107,7 @@ public class PantryItem {
         pantryItem.name = name;
         pantryItem.imageUrl = imageUrl;
         pantryItem.storageType = storageType;
+        pantryItem.sellByDate = sellByDate;
         pantryItem.expiryDate = expiryDate;
         pantryItem.expiryAutoCalculated = expiryAutoCalculated;
         pantryItem.cookable = true;
@@ -114,15 +116,22 @@ public class PantryItem {
     }
 
     public void updateManualFields(
-            String name, String imageUrl, StorageType storageType, LocalDate expiryDate, boolean expiryAutoCalculated) {
+            String name,
+            String imageUrl,
+            StorageType storageType,
+            LocalDate sellByDate,
+            LocalDate expiryDate,
+            boolean expiryAutoCalculated) {
         this.name = name;
         this.imageUrl = imageUrl;
         this.storageType = storageType;
+        this.sellByDate = sellByDate;
         this.expiryDate = expiryDate;
         this.expiryAutoCalculated = expiryAutoCalculated;
     }
 
-    public void updateExpiryDate(LocalDate expiryDate, boolean expiryAutoCalculated) {
+    public void updateExpiryDate(LocalDate sellByDate, LocalDate expiryDate, boolean expiryAutoCalculated) {
+        this.sellByDate = sellByDate;
         this.expiryDate = expiryDate;
         this.expiryAutoCalculated = expiryAutoCalculated;
     }

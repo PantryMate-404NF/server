@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 public record PantryItemResponseDto(
         Long pantryItemId,
         String ingredientName,
+        LocalDate sellByDate,
         LocalDate expiryDate,
         long dDay,
         PantryExpiryStatus expiryStatus,
@@ -26,6 +27,7 @@ public record PantryItemResponseDto(
         return new PantryItemResponseDto(
                 pantryItem.getPantryItemId(),
                 truncateName(pantryItem.getName()),
+                pantryItem.getSellByDate(),
                 pantryItem.getExpiryDate(),
                 dDay,
                 resolveExpiryStatus(dDay),

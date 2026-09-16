@@ -30,8 +30,10 @@ ai:
 
 pantry:
   expiry:
-    default-fallback-shelf-life-days: 7
+    # TODO: 미입력시 쓰는 임시 고정값
     default-fallback-extension-days: 3
+    # TODO: Ingredient.extendedConsumptionDays 매칭 로직 도입 전까지 쓰는 임시 고정값
+    temp-sell-by-to-expiry-days: 7
 
 management:
   endpoints:

@@ -8,8 +8,14 @@ public record PantryItemCreateRequestDto(
                         example = "양파",
                         requiredMode = Schema.RequiredMode.REQUIRED)
                 String ingredientName,
-        @Schema(description = "소비기한(YYYY-MM-DD). 미입력 시 등록일 기준으로 자동 계산됨", example = "2026-09-20")
+        @Schema(
+                        description = "소비기한(YYYY-MM-DD). sellByDate와 함께 입력 시 우선 적용됨. 둘 다 미입력 시 등록일 기준으로 자동 계산됨",
+                        example = "2026-09-20")
                 String expiryDate,
+        @Schema(
+                        description = "유통기한(YYYY-MM-DD). expiryDate 미입력 시에만 사용되며, 이 값을 기준으로 소비기한이 산정됨",
+                        example = "2026-09-14")
+                String sellByDate,
         @Schema(
                         description = "보관방법",
                         example = "REFRIGERATED",

@@ -35,7 +35,9 @@ public class PantryItemController {
         this.pantryItemService = pantryItemService;
     }
 
-    @Operation(summary = "팬트리 식재료 수기 등록", description = "소비기한 미입력 시 등록일 기준으로 자동 계산된다.")
+    @Operation(
+            summary = "팬트리 식재료 수기 등록",
+            description = "소비기한 미입력 시 유통기한 기준(임시 +7일)으로, 유통기한도 미입력 시 등록일 기준으로 자동 계산된다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "등록 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
