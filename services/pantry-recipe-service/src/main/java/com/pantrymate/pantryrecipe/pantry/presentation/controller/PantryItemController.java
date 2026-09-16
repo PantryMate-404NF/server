@@ -37,7 +37,7 @@ public class PantryItemController {
 
     @Operation(
             summary = "팬트리 식재료 수기 등록",
-            description = "소비기한 미입력 시 유통기한 기준(임시 +7일)으로, 유통기한도 미입력 시 등록일 기준으로 자동 계산된다.")
+            description = "소비기한 미입력 시 유통기한 기준(임시 +7일)으로, 유통기한도 미입력 시 등록일 기준으로(임시 +3일) 자동 계산된다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "등록 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -76,7 +76,7 @@ public class PantryItemController {
     @Operation(
             summary = "팬트리 식재료 수정",
             description = "수동 등록 항목은 식재료명·유통기한·보관방법·이미지·요리가능여부를 모두 수정할 수 있다. "
-                    + "자동 등록 항목은 식재료명·보관방법·이미지가 SKU에 연결되어 있어 수정되지 않고, 유통기한과 요리가능여부만 반영된다.")
+                    + "자동 등록 항목은 식재료명·보관방법·이미지가 수정되지 않고, 유통기한과 요리가능여부만 반영된다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

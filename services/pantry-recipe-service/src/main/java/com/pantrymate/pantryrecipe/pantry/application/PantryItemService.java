@@ -145,8 +145,12 @@ public class PantryItemService {
 
     private ResolvedExpiry resolveExpiry(String rawExpiryDate, String rawSellByDate) {
         if (rawExpiryDate != null && !rawExpiryDate.isBlank()) {
+            LocalDate expiryDate = parseDate(rawExpiryDate);
             LocalDate sellByDate = rawSellByDate == null || rawSellByDate.isBlank() ? null : parseDate(rawSellByDate);
-            return new ResolvedExpiry(sellByDate, parseDate(rawExpiryDate), false);
+            if (sellByDate != null && sellByDate.isAfter(expiryDate)) {
+                throw new BusinessException(PantryErrorCode.PANTRY_INVALID_DATE);
+            }
+            return new ResolvedExpiry(sellByDate, expiryDate, false);
         }
         if (rawSellByDate != null && !rawSellByDate.isBlank()) {
             LocalDate sellByDate = parseDate(rawSellByDate);

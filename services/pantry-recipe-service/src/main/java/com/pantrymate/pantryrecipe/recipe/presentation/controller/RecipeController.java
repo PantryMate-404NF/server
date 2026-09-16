@@ -39,7 +39,7 @@ public class RecipeController {
         this.cookingHistoryService = cookingHistoryService;
     }
 
-    @Operation(summary = "레시피 추천 목록 조회", description = "초기 버전은 개인화 없이 공개된 DB 기본/큐레이션 레시피를 반환한다.")
+    @Operation(summary = "레시피 추천 목록 조회", description = "현재 개발상으로는 개인화 없이 공개된 DB 기본/큐레이션 레시피를 반환한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     })
@@ -52,7 +52,7 @@ public class RecipeController {
     @Operation(
             summary = "레시피 상세 조회",
             description = "조리 순서와 필요 식재료 목록을 포함한 레시피 상세를 반환한다. "
-                    + "팬트리 보유/부족 재료 판별 및 부족 재료 상품 매핑은 이후 버전에서 지원한다.")
+                    + "팬트리 보유/부족 재료 판별 및 부족 재료 상품 매핑은 추후 지원 예정이다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RECIPE-NOTFOUND-ID")
@@ -105,7 +105,7 @@ public class RecipeController {
 
     @Operation(
             summary = "레시피 조리 완료",
-            description = "조리 완료 이력을 저장한다. 식재료 정리 바텀시트에 쓰일 팬트리 매칭 대상 조회는 이후 버전에서 지원한다.")
+            description = "조리 완료 이력을 저장한다. 식재료 정리 바텀시트에 쓰일 팬트리 매칭 대상 조회는 추후 지원 예정이다.")
     @SecurityRequirement(name = "bearerAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조리 완료 처리 성공"),
