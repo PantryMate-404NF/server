@@ -24,13 +24,10 @@ public class RecipeScrapService {
 
     @Transactional
     public void scrap(Long userId, Long recipeId) {
-        if (recipeScrapRepository.findByUserIdAndRecipe_RecipeId(userId, recipeId).isPresent()) {
-            return;
-        }
         Recipe recipe = recipeRepository
                 .findByRecipeIdAndPublishedTrue(recipeId)
                 .orElseThrow(() -> new BusinessException(RecipeErrorCode.RECIPE_NOTFOUND_ID));
-        recipeScrapRepository.save(RecipeScrap.create(userId, recipe));
+        recipeScrapRepository.insertIfAbsent(userId, recipe.getRecipeId());
     }
 
     @Transactional
