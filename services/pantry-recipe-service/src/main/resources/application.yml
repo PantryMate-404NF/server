@@ -6,8 +6,8 @@ spring:
     name: pantry-recipe-service
   datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/pantrymate_pantryrecipe
-    username: ${POSTGRES_USER:pantrymate}
-    password: ${POSTGRES_PASSWORD:pantrymate}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -22,7 +22,7 @@ spring:
 ai:
   ocr:
     base-url: ${AI_OCR_BASE_URL:http://ai-serving-svc:8000}
-    internal-api-key: ${AI_INTERNAL_API_KEY:pantrymate-internal-secret-key}
+    internal-api-key: ${AI_INTERNAL_API_KEY}
     timeout-seconds: ${AI_OCR_TIMEOUT_SECONDS:30}
   recommend:
     base-url: ${AI_RECOMMEND_BASE_URL:http://ai-serving-svc:8000}
