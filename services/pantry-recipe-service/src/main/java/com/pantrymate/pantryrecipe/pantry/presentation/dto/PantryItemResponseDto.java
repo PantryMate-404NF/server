@@ -3,6 +3,8 @@ package com.pantrymate.pantryrecipe.pantry.presentation.dto;
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.enums.PantryExpiryStatus;
+import com.pantrymate.pantryrecipe.pantry.domain.enums.PantryRegisterType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
@@ -16,7 +18,7 @@ public record PantryItemResponseDto(
         StorageType storageType,
         boolean isExpiryAutoCalculated,
         boolean isCookable,
-        String registerType,
+        @Schema(description = "등록 방식. MANUAL: 사용자 등록 / AUTO: 자사몰 구매 자동 등록") PantryRegisterType registerType,
         String imageUrl) {
 
     private static final long IMMINENT_THRESHOLD_DAYS = 3;
@@ -34,7 +36,7 @@ public record PantryItemResponseDto(
                 pantryItem.getStorageType(),
                 pantryItem.isExpiryAutoCalculated(),
                 pantryItem.isCookable(),
-                pantryItem.getRegisterType().getLabel(),
+                pantryItem.getRegisterType(),
                 pantryItem.getImageUrl());
     }
 
