@@ -9,17 +9,22 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 public record PantryItemResponseDto(
-        Long pantryItemId,
-        String ingredientName,
-        LocalDate sellByDate,
-        LocalDate expiryDate,
-        long dDay,
-        PantryExpiryStatus expiryStatus,
-        StorageType storageType,
-        boolean isExpiryAutoCalculated,
-        boolean isCookable,
-        @Schema(description = "등록 방식. MANUAL: 사용자 등록 / AUTO: 자사몰 구매 자동 등록") PantryRegisterType registerType,
-        String imageUrl) {
+        @Schema(example = "1", requiredMode = Schema.RequiredMode.REQUIRED) Long pantryItemId,
+        @Schema(example = "양파", requiredMode = Schema.RequiredMode.REQUIRED) String ingredientName,
+        @Schema(description = "유통기한. 없으면 null", example = "2026-09-14", nullable = true) LocalDate sellByDate,
+        @Schema(example = "2026-09-20", requiredMode = Schema.RequiredMode.REQUIRED) LocalDate expiryDate,
+        @Schema(description = "소비기한까지 남은 일수 (음수면 경과)", example = "4", requiredMode = Schema.RequiredMode.REQUIRED)
+                long dDay,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) PantryExpiryStatus expiryStatus,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) StorageType storageType,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean isExpiryAutoCalculated,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean isCookable,
+        @Schema(
+                        description = "등록 방식. MANUAL: 사용자 등록 / AUTO: 자사몰 구매 자동 등록",
+                        requiredMode = Schema.RequiredMode.REQUIRED)
+                PantryRegisterType registerType,
+        @Schema(description = "식재료 이미지 URL. 없으면 null", example = "https://cdn.pantrymate.com/pantry-items/1.jpg", nullable = true)
+                String imageUrl) {
 
     private static final long IMMINENT_THRESHOLD_DAYS = 3;
     private static final int NAME_DISPLAY_MAX_LENGTH = 10;
