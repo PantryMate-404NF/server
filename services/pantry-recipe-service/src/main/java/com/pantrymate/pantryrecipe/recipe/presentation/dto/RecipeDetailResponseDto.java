@@ -3,19 +3,21 @@ package com.pantrymate.pantryrecipe.recipe.presentation.dto;
 import com.pantrymate.pantryrecipe.recipe.domain.Recipe;
 import com.pantrymate.pantryrecipe.recipe.domain.enums.CuisineType;
 import com.pantrymate.pantryrecipe.recipe.domain.enums.RecipeDifficulty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 public record RecipeDetailResponseDto(
-        Long recipeId,
-        String title,
-        String description,
-        CuisineType cuisineType,
-        Integer cookingTime,
-        Integer servings,
-        RecipeDifficulty difficulty,
-        String thumbnailUrl,
-        List<RecipeStepResponseDto> steps,
-        List<RecipeIngredientResponseDto> ingredients) {
+        @Schema(example = "1", requiredMode = Schema.RequiredMode.REQUIRED) Long recipeId,
+        @Schema(example = "계란볶음밥", requiredMode = Schema.RequiredMode.REQUIRED) String title,
+        @Schema(example = "간단하게 만드는 계란볶음밥", requiredMode = Schema.RequiredMode.REQUIRED) String description,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) CuisineType cuisineType,
+        @Schema(description = "예상 조리 시간(분)", example = "15", requiredMode = Schema.RequiredMode.REQUIRED)
+                Integer cookingTime,
+        @Schema(description = "기준 인분 수", example = "1", requiredMode = Schema.RequiredMode.REQUIRED) Integer servings,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) RecipeDifficulty difficulty,
+        @Schema(example = "https://cdn.pantrymate.com/recipes/1/thumb.jpg", nullable = true) String thumbnailUrl,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<RecipeStepResponseDto> steps,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<RecipeIngredientResponseDto> ingredients) {
 
     public static RecipeDetailResponseDto of(
             Recipe recipe, List<RecipeStepResponseDto> steps, List<RecipeIngredientResponseDto> ingredients) {
