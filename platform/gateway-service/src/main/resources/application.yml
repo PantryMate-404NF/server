@@ -25,7 +25,36 @@ spring:
                 - Path=/api/users/**
               filters:
                 - RemoveRequestHeader=Authorization
-
+            - id: order-payment-service-cart
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
+              predicates:
+                - Path=/api/cart/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: order-payment-service-orders
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
+              predicates:
+                - Path=/api/orders/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: order-payment-service-payments
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
+              predicates:
+                - Path=/api/payments/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: product-service-products
+              uri: ${PRODUCT_SERVICE_URI:http://product-service.default.svc.cluster.local:8083}
+              predicates:
+                - Path=/api/products/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: product-service-categories
+              uri: ${PRODUCT_SERVICE_URI:http://product-service.default.svc.cluster.local:8083}
+              predicates:
+                - Path=/api/categories/**
+              filters:
+                - RemoveRequestHeader=Authorization
 # user-service와 반드시 동일해야 하는 JWT 서명 공유 시크릿 (HS256, 최소 32byte)
 security:
   jwt:

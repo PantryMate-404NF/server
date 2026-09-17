@@ -18,9 +18,9 @@ public enum OrderStatus {
 
     public boolean canTransitionTo(OrderStatus target) {
         return switch (this) {
-            case PENDING -> target == CONFIRMED || target == UNKNOWN_HOLD || target == CANCEL_REQUESTED;
+            case PENDING -> target == CONFIRMED || target == FAILED || target == UNKNOWN_HOLD;
             case CONFIRMED -> target == CANCEL_REQUESTED;
-            case UNKNOWN_HOLD -> target == CONFIRMED || target == CANCELLED;
+            case UNKNOWN_HOLD -> target == CONFIRMED || target == FAILED;
             case CANCEL_REQUESTED -> target == CANCELLED;
             case FAILED, CANCELLED -> false;
         };

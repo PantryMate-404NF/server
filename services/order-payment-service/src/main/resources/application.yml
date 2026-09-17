@@ -3,6 +3,10 @@ server:
 spring:
   application:
     name: order-payment-service
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
   datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/pantrymate_orderpayment
     username: ${POSTGRES_USER}
@@ -30,3 +34,4 @@ product-service:
 
 toss:
   secret-key: ${TOSS_SECRET_KEY}
+

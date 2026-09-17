@@ -1,10 +1,16 @@
 package com.pantrymate.orderpayment.payment.application.service;
 
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.orderpayment.order.domain.OrderItems;
 import com.pantrymate.orderpayment.order.domain.Orders;
 import com.pantrymate.orderpayment.order.domain.exception.OrderErrorCode;
+import com.pantrymate.orderpayment.order.domain.repository.OrderItemRepository;
 import com.pantrymate.orderpayment.order.domain.repository.OrderRepository;
 import com.pantrymate.orderpayment.payment.application.dto.PaymentConfirmRequest;
+import com.pantrymate.orderpayment.payment.application.dto.PaymentDetailResponse;
+import com.pantrymate.orderpayment.payment.application.dto.PaymentPrepareResponse;
+import com.pantrymate.orderpayment.payment.application.dto.StockDeductionItem;
+import com.pantrymate.orderpayment.payment.application.dto.StockDeductionRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossCancelRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossConfirmRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossConfirmResponse;
@@ -14,6 +20,7 @@ import com.pantrymate.orderpayment.payment.domain.exception.PaymentErrorCode;
 import com.pantrymate.orderpayment.payment.domain.repository.PaymentRepository;
 import com.pantrymate.orderpayment.payment.infrastructure.client.TossAuthorizationEncoding;
 import com.pantrymate.orderpayment.payment.infrastructure.client.TossPaymentClient;
+import com.pantrymate.orderpayment.product.client.ProductServiceClient;
 import feign.FeignException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +39,10 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final RedissonClient redissonClient;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final TossAuthorizationEncoding tossAuthorizationEncoding;
     private final TossPaymentClient tossPaymentClient;
+    private final ProductServiceClient productServiceClient;
 
     @Transactional
     public Payments confirmPayment(Long userId, PaymentConfirmRequest request) {
@@ -41,7 +50,7 @@ public class PaymentService {
 
         boolean acquired = false;
         try {
-            acquired = lock.tryLock(3, 10, TimeUnit.SECONDS);
+            acquired = lock.tryLock(3, 30, TimeUnit.SECONDS);
             if (!acquired) {
                 throw new BusinessException(PaymentErrorCode.PAYMENT_IN_PROGRESS);
             }
@@ -62,13 +71,30 @@ public class PaymentService {
             TossConfirmResponse response;
             try {
                 response = tossPaymentClient.confirmToss(authHeader, tossConfirmRequest);
-            }catch (FeignException.BadRequest e){
+            } catch (FeignException.BadRequest e) {
                 payment.fail("FAILED", e.getMessage(), e.contentUTF8());
                 order.fail();
                 paymentRepository.save(payment);
                 throw new BusinessException(PaymentErrorCode.PAYMENT_FAILED);
             }
             payment.approve(response.paymentKey(), response.method(), response.toString());
+            List<OrderItems> orderItems = orderItemRepository.findByOrderId(order.getId());
+            List<StockDeductionItem> stockItems = toStockDeductionItems(orderItems);
+            StockDeductionRequest stockRequest = new StockDeductionRequest(stockItems);
+
+            try {
+                productServiceClient.decreaseStocks(stockRequest);
+            }catch (FeignException e){
+                log.error("재고 차감 실패 - status: {}, message: {}, body: {}",
+                    e.status(), e.getMessage(), e.contentUTF8());
+                String cancelHeader = tossAuthorizationEncoding.createAuthorization();
+                TossCancelRequest cancelRequest = new TossCancelRequest("재고부족으로 인한 환불");
+                tossPaymentClient.cancelToss(cancelHeader, payment.getPaymentKey(), cancelRequest);
+                payment.cancel();
+                order.fail();
+                paymentRepository.save(payment);
+                throw new BusinessException(PaymentErrorCode.INSUFFICIENT_STOCK);
+            }
             order.confirm();
             return paymentRepository.save(payment);
         } catch (InterruptedException e) {
@@ -80,8 +106,9 @@ public class PaymentService {
             }
         }
     }
+
     @Transactional
-    public Payments preparePayment(Long userId, String orderId) {
+    public PaymentPrepareResponse preparePayment(Long userId, String orderId) {
         Orders order = orderRepository.findByOrderId(orderId)
             .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
 
@@ -90,26 +117,28 @@ public class PaymentService {
         }
 
         Payments payment = Payments.createReady(order.getId(), order.getTotalAmount());
-        return paymentRepository.save(payment);
+        paymentRepository.save(payment);
+        return PaymentPrepareResponse.of(payment, order);
     }
 
     @Transactional(readOnly = true)
-    public Payments getPayments(Long userId, String orderId) {
+    public PaymentDetailResponse getPayments(Long userId, String orderId) {
         Orders order = orderRepository.findByOrderId(orderId)
             .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
-        if(!order.getUserId().equals(userId)) {
+        if (!order.getUserId().equals(userId)) {
             throw new BusinessException(OrderErrorCode.ORDER_NOT_FOUND);
         }
-        return paymentRepository.findByOrderId(order.getId())
+        Payments payment  = paymentRepository.findByOrderId(order.getId())
             .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+        return PaymentDetailResponse.of(payment, order);
 
     }
 
     @Transactional
-    public Payments cancelPayment(Long userId, String orderId, String cancelReason) {
+    public PaymentDetailResponse cancelPayment(Long userId, String orderId, String cancelReason) {
         Orders order = orderRepository.findByOrderId(orderId)
             .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
-        if(!order.getUserId().equals(userId)) {
+        if (!order.getUserId().equals(userId)) {
             throw new BusinessException(OrderErrorCode.ORDER_NOT_FOUND);
         }
 
@@ -119,7 +148,15 @@ public class PaymentService {
         TossCancelRequest request = new TossCancelRequest(cancelReason);
         tossPaymentClient.cancelToss(authHeader, payment.getPaymentKey(), request);
         payment.cancel();
-        return paymentRepository.save(payment);
+        paymentRepository.save(payment);
+        return PaymentDetailResponse.of(payment, order);
+    }
+
+    private List<StockDeductionItem> toStockDeductionItems(List<OrderItems> orderItems) {
+        return orderItems.stream()
+            .map(orderItem -> new StockDeductionItem(orderItem.getProductId(),
+                orderItem.getQuantity()))
+            .toList();
     }
 
 

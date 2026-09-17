@@ -109,7 +109,7 @@ public class ProductController {
         return ApiResponse.success("상품이 삭제되었습니다.", response);
     }
 
-    @PatchMapping("/decrease")
+    @PostMapping("/decrease")
     public ApiResponse<Void> decreaseStock(
         @RequestBody StockDeductionRequest request
     ){

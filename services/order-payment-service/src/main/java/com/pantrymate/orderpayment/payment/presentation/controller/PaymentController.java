@@ -33,8 +33,8 @@ public class PaymentController {
         CurrentUser currentUser,
         @PathVariable String orderId
     ) {
-        Payments payment = paymentService.preparePayment(currentUser.userId(), orderId);
-        return ApiResponse.success("결제가 준비되었습니다.", PaymentPrepareResponse.from(payment));
+        PaymentPrepareResponse response = paymentService.preparePayment(currentUser.userId(), orderId);
+        return ApiResponse.success("결제가 준비되었습니다.", response);
     }
 
     @PostMapping("/confirm")
@@ -50,19 +50,20 @@ public class PaymentController {
     public ApiResponse<PaymentDetailResponse> getPayment(
         CurrentUser currentUser,
         @PathVariable String orderId
-    ){
-        Payments payment = paymentService.getPayments(currentUser.userId(), orderId);
-        return ApiResponse.success("정상적으로 결제 조회가 완료되었습니다.", PaymentDetailResponse.from(payment));
+    ) {
+        PaymentDetailResponse response = paymentService.getPayments(currentUser.userId(), orderId);
+        return ApiResponse.success("정상적으로 결제 조회가 완료되었습니다.", response);
     }
+
     @PostMapping("/{orderId}/cancel")
     public ApiResponse<PaymentDetailResponse> cancelPayment(
         CurrentUser currentUser,
         @PathVariable String orderId,
         @Valid @RequestBody PaymentCancelRequest request
-    ){
-        Payments payment = paymentService.cancelPayment(currentUser.userId(), orderId,
+    ) {
+        PaymentDetailResponse response = paymentService.cancelPayment(currentUser.userId(), orderId,
             request.cancelReason());
-        return ApiResponse.success("결제가 취소되었습니다.",  PaymentDetailResponse.from(payment));
+        return ApiResponse.success("결제가 취소되었습니다.",  response);
     }
 
 }

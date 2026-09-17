@@ -2,7 +2,9 @@ package com.pantrymate.orderpayment.order.application.service;
 
 import com.pantrymate.common.exception.BusinessException;
 import com.pantrymate.orderpayment.cart.domain.CartItems;
+import com.pantrymate.orderpayment.cart.domain.Carts;
 import com.pantrymate.orderpayment.cart.domain.repository.CartItemRepository;
+import com.pantrymate.orderpayment.cart.domain.repository.CartRepository;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
 import com.pantrymate.orderpayment.product.client.ProductServiceClient;
 import com.pantrymate.orderpayment.product.dto.ProductInfoResponse;
@@ -27,21 +29,29 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ProductServiceClient productServiceClient;
     private final OrderItemRepository orderItemRepository;
+    private final CartRepository cartRepository;
 
     @Transactional
     public Orders createOrder(Long userId, OrderCreateRequest request, String idempotencyKey) {
         Optional<Orders> existingOrder = orderRepository.findByIdempotencyKey(idempotencyKey);
-            if(existingOrder.isPresent()) {
-                Orders order = existingOrder.get();
+        if (existingOrder.isPresent()) {
+            Orders order = existingOrder.get();
 
-                if(!order.getUserId().equals(userId)) {
-                    throw new BusinessException(OrderErrorCode.INVALID_IDEMPOTENCY_KEY);
-                }
-                return order;
+            if (!order.getUserId().equals(userId)) {
+                throw new BusinessException(OrderErrorCode.INVALID_IDEMPOTENCY_KEY);
             }
+            return order;
+        }
+        Carts cart = cartRepository.findByUserId(userId)
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.USER_NOT_FOUND));
 
         List<CartItems> selectedItems = cartItemRepository.findAllById(
             request.selectedCartItemIds());
+        selectedItems.forEach(item -> {
+            if (!item.getCartId().equals(cart.getId())) {
+                throw new BusinessException(OrderErrorCode.CART_ITEM_NOT_FOUND);
+            }
+        });
         List<validateItem> validateItems = selectedItems.stream()
             // 상품 건수마다 현재 getProductInfo를 하면서 N+1 문제가 발생하고있음. 리펙토링 필요함..
             .map(cartItem -> {
@@ -54,7 +64,8 @@ public class OrderService {
             .mapToLong(v -> v.product().price() * v.items().getQuantity())
             .sum();
         String orderName = createOrderName(validateItems);
-        Orders order = orderRepository.save(Orders.create(userId, orderName, totalAmount, idempotencyKey));
+        Orders order = orderRepository.save(
+            Orders.create(userId, orderName, totalAmount, idempotencyKey));
 
         List<OrderItems> orderItems = validateItems.stream()
             .map(v -> OrderItems.create(

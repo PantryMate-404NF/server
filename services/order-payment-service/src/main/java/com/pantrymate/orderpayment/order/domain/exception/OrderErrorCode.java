@@ -14,7 +14,8 @@ public enum OrderErrorCode implements ErrorCode {
     PRODUCT_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "ORDER-003", "잠시 후 다시 시도해 주세요."),
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-004", "주문을 찾을 수 없습니다."),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-005", "장바구니 항목을 찾을 수 없습니다."),
-    INVALID_IDEMPOTENCY_KEY(HttpStatus.CONFLICT, "ORDER-006", "키 값이 일치하지 않습니다.");
+    INVALID_IDEMPOTENCY_KEY(HttpStatus.CONFLICT, "ORDER-006", "키 값이 일치하지 않습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-007", "일치하는 유저를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

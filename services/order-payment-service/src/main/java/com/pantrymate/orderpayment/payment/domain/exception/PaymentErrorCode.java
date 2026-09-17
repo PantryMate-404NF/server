@@ -18,7 +18,8 @@ public enum PaymentErrorCode implements ErrorCode {
     PAYMENT_IN_PROGRESS(HttpStatus.CONFLICT, "PAYMENT-007", "이미 처리 중인 결제 요청입니다."),
     CANCEL_FAILED(HttpStatus.CONFLICT, "PAYMENT-008", "결제 취소에 실패했습니다."),
     ALREADY_CANCELED(HttpStatus.CONFLICT, "PAYMENT-009", "이미 취소된 결제입니다."),
-    PAYMENT_FAILED(HttpStatus.CONFLICT, "PAYMENT-010", "결제에 실패하였습니다.");
+    PAYMENT_FAILED(HttpStatus.CONFLICT, "PAYMENT-010", "결제에 실패하였습니다."),
+    INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "PAYMENT-011", "재고가 부족하여 결제가 취소되었습니다.");
 
     private final HttpStatus status;
     private final String code;
