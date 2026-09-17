@@ -1,4 +1,4 @@
-# 빌드 컨텍스트는 레포 루트여야 함: docker build -f services/product-service/Dockerfile .
+# 빌드 컨텍스트는 레포 루트여야 함: docker build -f services/pantry-recipe-service/Dockerfile .
 FROM eclipse-temurin:25-jdk-alpine AS build
 WORKDIR /workspace
 
@@ -10,15 +10,15 @@ COPY modules modules
 COPY platform platform
 COPY services services
 
-RUN ./gradlew :services:product-service:bootJar --no-daemon
+RUN ./gradlew :services:pantry-recipe-service:bootJar --no-daemon
 
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
-COPY --from=build /workspace/services/product-service/build/libs/*.jar ./
+COPY --from=build /workspace/services/pantry-recipe-service/build/libs/*.jar ./
 RUN rm -f *-plain.jar && mv *.jar app.jar
 
-EXPOSE 8083
+EXPOSE 8082
 
 ENTRYPOINT ["java", \
   "-Dspring.profiles.active=prod", \
