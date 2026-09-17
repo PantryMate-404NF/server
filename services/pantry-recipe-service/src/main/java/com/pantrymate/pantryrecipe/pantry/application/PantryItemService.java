@@ -107,6 +107,17 @@ public class PantryItemService {
         pantryItemRepository.delete(pantryItem);
     }
 
+    @Transactional
+    public void deleteAllByUser(Long userId, List<Long> pantryItemIds) {
+        List<PantryItem> items = pantryItemRepository.findAllById(pantryItemIds);
+        boolean allOwnedByUser =
+                items.size() == pantryItemIds.size() && items.stream().allMatch(item -> item.getUserId().equals(userId));
+        if (!allOwnedByUser) {
+            throw new BusinessException(PantryErrorCode.PANTRY_NOTFOUND_ITEM);
+        }
+        pantryItemRepository.deleteAll(items);
+    }
+
     private PantryItem getByIdAndUserId(Long pantryItemId, Long userId) {
         return pantryItemRepository
                 .findById(pantryItemId)
