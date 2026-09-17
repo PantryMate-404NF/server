@@ -8,10 +8,13 @@ import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemResponseDto
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemUpdateRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,13 +40,100 @@ public class PantryItemController {
 
     @Operation(
             summary = "팬트리 식재료 수기 등록",
-            description = "소비기한 미입력 시 유통기한 기준(임시 +7일)으로, 유통기한도 미입력 시 등록일 기준으로(임시 +3일) 자동 계산된다.")
+            description = "소비기한 미입력 시 유통기한 기준(임시 +7일)으로, 유통기한도 미입력 시 등록일 기준으로 자동 계산된다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "등록 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "201",
+                description = "등록 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "SUCCESS",
+                                                          "message": "팬트리에 식재료가 성공적으로 등록되었습니다.",
+                                                          "data": {
+                                                            "pantryItemId": 1,
+                                                            "ingredientName": "양파",
+                                                            "sellByDate": null,
+                                                            "expiryDate": "2026-09-20",
+                                                            "dDay": 4,
+                                                            "expiryStatus": "NORMAL",
+                                                            "storageType": "REFRIGERATED",
+                                                            "isExpiryAutoCalculated": false,
+                                                            "isCookable": true,
+                                                            "registerType": "MANUAL",
+                                                            "imageUrl": null
+                                                          },
+                                                          "error": null,
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "400",
-                description = "PANTRY-INVALID-NAME / PANTRY-INVALID-DATE / PANTRY-INVALID-STORAGE"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED")
+                description = "PANTRY-INVALID-NAME / PANTRY-INVALID-DATE / PANTRY-INVALID-STORAGE",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples = {
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-NAME",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "식재료명은 1자 이상 20자 이하여야 합니다.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-NAME",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """),
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-DATE",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "올바른 날짜 형식(YYYY-MM-DD)을 입력해주세요.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-DATE",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """),
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-STORAGE",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "올바른 보관방법(REFRIGERATED, FROZEN, ROOM_TEMP)을 선택해주세요.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-STORAGE",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """)
+                                })),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "AUTH-UNAUTHORIZED",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "ERROR",
+                                                          "message": "인증 정보가 유효하지 않습니다.",
+                                                          "data": null,
+                                                          "error": "AUTH-UNAUTHORIZED",
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """)))
     })
     @PostMapping
     public ResponseEntity<ApiResponse<PantryItemResponseDto>> create(
@@ -55,10 +145,88 @@ public class PantryItemController {
 
     @Operation(summary = "팬트리 식재료 목록 조회", description = "로그인한 유저의 팬트리 식재료를 조회한다. 보관방법 필터링과 정렬 기준 선택을 지원한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "400", description = "PANTRY-INVALID-STORAGE / PANTRY-INVALID-SORT"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED")
+                responseCode = "200",
+                description = "조회 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "SUCCESS",
+                                                          "message": "팬트리 목록 조회가 완료되었습니다.",
+                                                          "data": [
+                                                            {
+                                                              "pantryItemId": 1,
+                                                              "ingredientName": "양파",
+                                                              "sellByDate": null,
+                                                              "expiryDate": "2026-09-20",
+                                                              "dDay": 4,
+                                                              "expiryStatus": "NORMAL",
+                                                              "storageType": "REFRIGERATED",
+                                                              "isExpiryAutoCalculated": false,
+                                                              "isCookable": true,
+                                                              "registerType": "MANUAL",
+                                                              "imageUrl": null
+                                                            }
+                                                          ],
+                                                          "error": null,
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "PANTRY-INVALID-STORAGE / PANTRY-INVALID-SORT",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples = {
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-STORAGE",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "올바른 보관방법(REFRIGERATED, FROZEN, ROOM_TEMP)을 선택해주세요.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-STORAGE",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """),
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-SORT",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "올바른 정렬 기준(RECENT, IMMINENT, OLDEST)을 선택해주세요.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-SORT",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """)
+                                })),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "AUTH-UNAUTHORIZED",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "ERROR",
+                                                          "message": "인증 정보가 유효하지 않습니다.",
+                                                          "data": null,
+                                                          "error": "AUTH-UNAUTHORIZED",
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """)))
     })
     @GetMapping
     public ResponseEntity<ApiResponse<List<PantryItemResponseDto>>> list(
@@ -76,15 +244,118 @@ public class PantryItemController {
     @Operation(
             summary = "팬트리 식재료 수정",
             description = "수동 등록 항목은 식재료명·유통기한·보관방법·이미지·요리가능여부를 모두 수정할 수 있다. "
-                    + "자동 등록 항목은 식재료명·보관방법·이미지가 수정되지 않고, 유통기한과 요리가능여부만 반영된다.")
+                    + "자동 등록 항목은 식재료명·보관방법·이미지가 SKU에 연결되어 있어 수정되지 않고, 유통기한과 요리가능여부만 반영된다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "수정 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "SUCCESS",
+                                                          "message": "팬트리 식재료가 수정되었습니다.",
+                                                          "data": {
+                                                            "pantryItemId": 1,
+                                                            "ingredientName": "양파",
+                                                            "sellByDate": null,
+                                                            "expiryDate": "2026-09-25",
+                                                            "dDay": 9,
+                                                            "expiryStatus": "NORMAL",
+                                                            "storageType": "REFRIGERATED",
+                                                            "isExpiryAutoCalculated": false,
+                                                            "isCookable": true,
+                                                            "registerType": "MANUAL",
+                                                            "imageUrl": null
+                                                          },
+                                                          "error": null,
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "400",
-                description = "PANTRY-INVALID-NAME / PANTRY-INVALID-DATE / PANTRY-INVALID-STORAGE"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+                description = "PANTRY-INVALID-NAME / PANTRY-INVALID-DATE / PANTRY-INVALID-STORAGE",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples = {
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-NAME",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "식재료명은 1자 이상 20자 이하여야 합니다.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-NAME",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """),
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-DATE",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "올바른 날짜 형식(YYYY-MM-DD)을 입력해주세요.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-DATE",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """),
+                                    @ExampleObject(
+                                            name = "PANTRY-INVALID-STORAGE",
+                                            value =
+                                                    """
+                                                    {
+                                                      "status": "ERROR",
+                                                      "message": "올바른 보관방법(REFRIGERATED, FROZEN, ROOM_TEMP)을 선택해주세요.",
+                                                      "data": null,
+                                                      "error": "PANTRY-INVALID-STORAGE",
+                                                      "timestamp": "2026-09-16T01:23:45.678Z"
+                                                    }
+                                                    """)
+                                })),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "404", description = "PANTRY-NOTFOUND-ITEM")
+                responseCode = "401",
+                description = "AUTH-UNAUTHORIZED",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "ERROR",
+                                                          "message": "인증 정보가 유효하지 않습니다.",
+                                                          "data": null,
+                                                          "error": "AUTH-UNAUTHORIZED",
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "PANTRY-NOTFOUND-ITEM",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "ERROR",
+                                                          "message": "해당 팬트리 식재료를 찾을 수 없습니다.",
+                                                          "data": null,
+                                                          "error": "PANTRY-NOTFOUND-ITEM",
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """)))
     })
     @PatchMapping("/{pantryItemId}")
     public ResponseEntity<ApiResponse<PantryItemResponseDto>> edit(
@@ -97,10 +368,60 @@ public class PantryItemController {
 
     @Operation(summary = "팬트리 식재료 단건 삭제", description = "본인 소유의 팬트리 식재료를 삭제한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "404", description = "PANTRY-NOTFOUND-ITEM")
+                responseCode = "200",
+                description = "삭제 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "SUCCESS",
+                                                          "message": "팬트리 식재료가 삭제되었습니다.",
+                                                          "data": null,
+                                                          "error": null,
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "AUTH-UNAUTHORIZED",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "ERROR",
+                                                          "message": "인증 정보가 유효하지 않습니다.",
+                                                          "data": null,
+                                                          "error": "AUTH-UNAUTHORIZED",
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "PANTRY-NOTFOUND-ITEM",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                examples =
+                                        @ExampleObject(
+                                                value =
+                                                        """
+                                                        {
+                                                          "status": "ERROR",
+                                                          "message": "해당 팬트리 식재료를 찾을 수 없습니다.",
+                                                          "data": null,
+                                                          "error": "PANTRY-NOTFOUND-ITEM",
+                                                          "timestamp": "2026-09-16T01:23:45.678Z"
+                                                        }
+                                                        """)))
     })
     @DeleteMapping("/{pantryItemId}")
     public ResponseEntity<ApiResponse<Void>> delete(
