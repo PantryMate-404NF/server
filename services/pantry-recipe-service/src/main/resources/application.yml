@@ -5,7 +5,7 @@ spring:
   application:
     name: pantry-recipe-service
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/pantrymate_pantryrecipe
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/pantrymate_pantryrecipe
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
   jpa:

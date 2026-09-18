@@ -1,8 +1,11 @@
+server:
+  port: ${SERVER_PORT:8083}
+
 spring:
   application:
     name: product-service
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/pantrymate_product
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:-5432}/pantrymate_product
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
   jpa:

@@ -1,8 +1,11 @@
+server:
+  port: ${SERVER_PORT:8084}
+
 spring:
   application:
     name: order-payment-service
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/pantrymate_orderpayment
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:-5432}/pantrymate_orderpayment
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
   jpa:
