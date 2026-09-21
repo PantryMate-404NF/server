@@ -94,10 +94,13 @@ public class ProductService {
         if (request.categoryId() != null && !categoryRepository.existsById(request.categoryId())) {
             throw new BusinessException(CategoryErrorCode.CATEGORY_NOT_FOUND);
         }
+        if(request.thumbnailUrl() != null && request.thumbnailUrl().isBlank()) {
+            throw new BusinessException(ProductErrorCode.THUMBNAIL_REQUIRED);
+        }
         if (request.price() != null && request.price() <= 0) {
             throw new BusinessException(ProductErrorCode.INVALID_PRICE);
         }
-        ProductUnit unit = (request.unit() != null) ? ProductUnit.valueOf(request.unit()) : null;
+        ProductUnit unit = (request.unit() != null) ? ProductUnit.from(request.unit()) : null;
 
         product.updateInfo(
             request.name(),

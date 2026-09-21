@@ -1,6 +1,8 @@
 package com.pantrymate.product.product.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
+import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.common.exception.CommonErrorCode;
 import com.pantrymate.product.product.application.dto.ProductDeleteResponse;
 import com.pantrymate.product.product.application.dto.ProductDetailResponse;
 import com.pantrymate.product.product.application.dto.ProductDiscontinueResponse;
@@ -54,6 +56,10 @@ public class ProductController {
         @RequestParam(required = false) Long categoryId,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "60") int size) {
+
+        if (page < 0 || size <= 0) {
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT);
+        }
 
         Pageable pageable = PageRequest.of(page, size);
         ProductListResponse response = productService.getProductList(categoryId, pageable);

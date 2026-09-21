@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "cart_items")
+@Table(name = "cart_items", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_cart_items_cart_id_product_id",
+    columnNames = {"cart_id", "product_id"})
+})
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -45,7 +49,7 @@ public class CartItems {
     }
 
 
-    public void changeQuantity(Integer quantity) {
+    public void changeQuantity(int quantity) {
         if (quantity <= 0) {
             throw new IllegalArgumentException("수량은 1개 이상이여야합니다.");
         }
@@ -56,6 +60,7 @@ public class CartItems {
         if (quantity <= 0) {
             throw new IllegalArgumentException("수량은 1개 이상이여야합니다.");
         }
-        this.quantity += quantity;
+        //오버플로우 관리를 위해 Math.addExact 함수 사용
+        this.quantity += Math.addExact(this.quantity, quantity);
     }
 }
