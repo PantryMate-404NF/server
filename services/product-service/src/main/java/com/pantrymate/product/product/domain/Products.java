@@ -4,6 +4,7 @@ import com.pantrymate.product.product.domain.enums.ProductStatus;
 import com.pantrymate.product.product.domain.enums.ProductUnit;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -18,6 +19,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
  * 상품 엔티티.
@@ -39,6 +44,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@EntityListeners(AuditingEntityListener.class)
 public class Products {
 
     @Id
@@ -98,9 +104,11 @@ public class Products {
     private ProductStatus status;
 
     @Column(nullable = false)
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
