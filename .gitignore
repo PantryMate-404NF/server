@@ -44,3 +44,7 @@ CLAUDE.md
 
 ### Personal Local Test Tools ###
 /test-tool/
+
+### Local run scripts output ###
+/logs/
+/scripts/

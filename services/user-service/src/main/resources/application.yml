@@ -5,7 +5,7 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/pantrymate_user
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/pantrymate_user
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
   jpa:

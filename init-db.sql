@@ -1,2 +1,3 @@
 CREATE DATABASE pantrymate_product;
 CREATE DATABASE pantrymate_user;
+CREATE DATABASE pantrymate_pantryrecipe;

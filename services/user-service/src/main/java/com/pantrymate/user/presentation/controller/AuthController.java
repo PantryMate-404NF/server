@@ -10,6 +10,7 @@ import com.pantrymate.user.infrastructure.jwt.JwtProvider;
 import com.pantrymate.user.presentation.dto.ReissueResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
@@ -51,41 +52,61 @@ public class AuthController {
 
     @Operation(
             summary = "소셜 로그인 시작",
-            description = "FE 로그인 버튼이 호출하는 엔드포인트. fetch가 아니라 페이지 이동(window.location 등)으로 호출해야 한다. "
-                    + "카카오/네이버 인가 코드 요청 URL로 302 리다이렉트한다. "
-                    + "카카오/네이버 REST API 키는 서버에서만 사용하며 FE에는 노출되지 않는다. "
-                    + "로그인 CSRF 방지를 위해 state를 발급해 HttpOnly 쿠키로 심는다.",
+            description = "FE 로그인 버튼 클릭 시 fetch가 아닌 페이지 이동으로 호출. "
+                    + "CSRF 방지용 state를 HttpOnly 쿠키로 발급하고 카카오/네이버 동의 화면으로 302 리다이렉트한다. "
+                    + "provider가 유효하지 않으면 '{frontend-callback-url}?error=AUTH-INVALID-PROVIDER'로 리다이렉트한다.",
             security = {})
     @io.swagger.v3.oas.annotations.responses.ApiResponses(
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "302", description = "카카오/네이버 인가 동의 화면으로 리다이렉트 (Location 헤더)"))
+                    responseCode = "302",
+                    description = "성공: 카카오/네이버 인가 동의 화면으로 리다이렉트. "
+                            + "실패: FE 콜백 URL로 '?error=AUTH-INVALID-PROVIDER' 리다이렉트"))
     @GetMapping("/api/auth/authorize/{provider}")
     public ResponseEntity<Void> authorize(
-            @Parameter(description = "소셜 제공자", example = "kakao") @PathVariable String provider) {
-        String state = UUID.randomUUID().toString();
-        String authorizeUrl = authService.getAuthorizeUrl(provider, state);
-        ResponseCookie stateCookie = buildStateCookie(state, OAUTH_STATE_MAX_AGE_SECONDS);
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(authorizeUrl))
-                .header(HttpHeaders.SET_COOKIE, stateCookie.toString())
-                .build();
+            @Parameter(
+                            description = "소셜 제공자",
+                            example = "kakao",
+                            schema = @Schema(allowableValues = {"kakao", "naver"}))
+                    @PathVariable
+                    String provider) {
+        try {
+            String state = UUID.randomUUID().toString();
+            String authorizeUrl = authService.getAuthorizeUrl(provider, state);
+            ResponseCookie stateCookie = buildStateCookie(state, OAUTH_STATE_MAX_AGE_SECONDS);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(authorizeUrl))
+                    .header(HttpHeaders.SET_COOKIE, stateCookie.toString())
+                    .build();
+        } catch (BusinessException e) {
+            URI redirectUri = UriComponentsBuilder.fromUriString(frontendCallbackUrl)
+                    .queryParam("error", e.getErrorCode().getCode())
+                    .build()
+                    .toUri();
+            return ResponseEntity.status(HttpStatus.FOUND).location(redirectUri).build();
+        }
     }
 
     @Operation(
             summary = "소셜 로그인 및 간편 가입",
-            description = "카카오/네이버 OAuth Redirect URI로 직접 등록되는 콜백 엔드포인트. "
-                    + "FE가 직접 호출하지 않는다 — authorize로 이동한 브라우저가 카카오/네이버 로그인 완료 후 자동으로 돌아오는 주소다. "
-                    + "authorize 단계에서 발급된 state를 쿠키 값과 대조해 로그인 CSRF를 차단한 뒤, "
-                    + "인가코드 검증 후 로그인/자동가입 처리하고, Refresh Token을 HttpOnly 쿠키로 심어 FE 콜백으로 302 리다이렉트한다. "
-                    + "성공 시 '{frontend-callback-url}?result=success', 실패 시 '{frontend-callback-url}?error=AUTH-XXX'로 리다이렉트한다. "
-                    + "Access Token은 이 응답에 포함되지 않으며 /auth/reissue로 별도 발급받아야 한다.",
+            description = "카카오/네이버 OAuth Redirect URI로 등록되는 콜백 엔드포인트 (FE가 직접 호출하지 않음). "
+                    + "state 검증 후 로그인/자동가입 처리하고 Refresh Token을 HttpOnly 쿠키로 심어, "
+                    + "성공 시 '{frontend-callback-url}?result=success', 실패 시 '?error=AUTH-XXX'로 리다이렉트한다. "
+                    + "Access Token은 이 응답에 없으며 /auth/reissue로 별도 발급받아야 한다.",
             security = {})
     @io.swagger.v3.oas.annotations.responses.ApiResponses(
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "302", description = "FE 콜백 URL로 리다이렉트 (성공: ?result=success, 실패: ?error=코드)"))
+                    responseCode = "302",
+                    description = "FE 콜백 URL로 리다이렉트. 성공: '?result=success'. 실패: '?error=코드' — "
+                            + "가능한 코드는 AUTH-INVALID-PROVIDER / AUTH-INVALID-AUTH-CODE / AUTH-INVALID-STATE / "
+                            + "AUTH-OAUTH-COMMUNICATION-ERROR 4가지로 고정."))
     @GetMapping("/api/auth/login/{provider}")
     public ResponseEntity<Void> login(
-            @Parameter(description = "소셜 제공자", example = "kakao") @PathVariable String provider,
+            @Parameter(
+                            description = "소셜 제공자",
+                            example = "kakao",
+                            schema = @Schema(allowableValues = {"kakao", "naver"}))
+                    @PathVariable
+                    String provider,
             @Parameter(description = "소셜 서버가 전달하는 OAuth2 인가 코드")
                     @RequestParam(value = "code", required = false) String code,
             @Parameter(description = "소셜 서버가 그대로 반환하는 CSRF 방지용 state")
@@ -127,6 +148,13 @@ public class AuthController {
             description = "HttpOnly refreshToken 쿠키를 검증해 Access Token을 새로 발급한다. "
                     + "Refresh Token Rotation(RTR) 적용 - 호출 시마다 Refresh Token도 새로 발급되어 쿠키가 갱신된다.",
             security = {})
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "재발급 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "AUTH-MISSING-TOKEN(쿠키 없음) / AUTH-EXPIRED-TOKEN(만료) / AUTH-INVALID-TOKEN(위조·재사용 탐지)"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER-NOTFOUND-ID")
+    })
     @PostMapping("/api/auth/reissue")
     public ResponseEntity<ApiResponse<ReissueResponseDto>> reissue(
             @Parameter(hidden = true) @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
@@ -141,6 +169,13 @@ public class AuthController {
             summary = "로그아웃",
             description = "Redis에 저장된 Refresh Token을 삭제하고 refreshToken 쿠키를 만료시킨다. Bearer Access Token 필요.")
     @SecurityRequirement(name = "bearerAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200", description = "항상 성공 처리 (이미 만료/위조된 토큰이어도 조용히 무시)"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "Authorization 헤더 누락/무효 — 게이트웨이 단에서 이 서비스에 도달하기 전에 차단됨")
+    })
     @PostMapping("/api/auth/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @Parameter(hidden = true) @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
@@ -151,10 +186,11 @@ public class AuthController {
                 .body(ApiResponse.success("로그아웃이 성공적으로 완료되었습니다.", null));
     }
 
+    //TODO: secure(true) 추후
     private ResponseCookie buildRefreshCookie(String value, long maxAgeSeconds) {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(maxAgeSeconds)
@@ -164,7 +200,7 @@ public class AuthController {
     private ResponseCookie buildStateCookie(String value, long maxAgeSeconds) {
         return ResponseCookie.from(OAUTH_STATE_COOKIE, value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .sameSite("Lax")
                 .path("/api/auth")
                 .maxAge(maxAgeSeconds)
