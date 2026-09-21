@@ -101,6 +101,11 @@ public class PantryItemService {
         return PantryItemResponseDto.from(pantryItem);
     }
 
+    @Transactional(readOnly = true)
+    public List<Long> getUserIdsWithItems() {
+        return pantryItemRepository.findDistinctUserIds();
+    }
+
     @Transactional
     public void delete(Long userId, Long pantryItemId) {
         PantryItem pantryItem = getByIdAndUserId(pantryItemId, userId);

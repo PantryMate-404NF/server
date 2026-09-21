@@ -10,6 +10,9 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
 
     List<PantryItem> findByUserIdOrderByCreatedAtDesc(Long userId);
 
+    @Query("SELECT DISTINCT p.userId FROM PantryItem p")
+    List<Long> findDistinctUserIds();
+
     List<PantryItem> findByUserIdAndStorageTypeOrderByCreatedAtDesc(Long userId, StorageType storageType);
 
     List<PantryItem> findByUserIdOrderByCreatedAtAsc(Long userId);
