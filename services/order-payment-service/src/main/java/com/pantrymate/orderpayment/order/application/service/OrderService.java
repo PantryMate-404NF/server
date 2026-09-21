@@ -6,6 +6,9 @@ import com.pantrymate.orderpayment.cart.domain.Carts;
 import com.pantrymate.orderpayment.cart.domain.repository.CartItemRepository;
 import com.pantrymate.orderpayment.cart.domain.repository.CartRepository;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
+import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
+import com.pantrymate.orderpayment.order.application.dto.OrderSummaryResponse;
+import com.pantrymate.orderpayment.order.domain.enums.OrderStatus;
 import com.pantrymate.orderpayment.product.client.ProductServiceClient;
 import com.pantrymate.orderpayment.product.dto.ProductInfoResponse;
 import com.pantrymate.orderpayment.order.domain.OrderItems;
@@ -17,6 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +83,17 @@ public class OrderService {
             .toList();
         orderItemRepository.saveAll(orderItems);
         return order;
+    }
+
+    @Transactional(readOnly = true)
+    public OrderListResponse getOrderList(Long userId, Pageable pageable) {
+        Page<Orders> orderPage = orderRepository.findByUserIdAndStatusNotIn(
+            userId,
+            List.of(OrderStatus.PENDING, OrderStatus.FAILED),
+            pageable
+        );
+        Page<OrderSummaryResponse> summaryPage = orderPage.map(OrderSummaryResponse::from);
+        return OrderListResponse.from(summaryPage);
     }
 
     private record validateItem(CartItems items, ProductInfoResponse product) {
