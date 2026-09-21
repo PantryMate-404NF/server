@@ -61,6 +61,6 @@ public class CartItems {
             throw new IllegalArgumentException("수량은 1개 이상이여야합니다.");
         }
         //오버플로우 관리를 위해 Math.addExact 함수 사용
-        this.quantity += Math.addExact(this.quantity, quantity);
+        this.quantity = Math.addExact(this.quantity, quantity);
     }
 }
