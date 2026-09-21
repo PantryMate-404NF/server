@@ -4,6 +4,7 @@ import com.pantrymate.product.product.domain.enums.ProductStatus;
 import com.pantrymate.product.product.domain.enums.ProductUnit;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -18,6 +19,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
  * 상품 엔티티.
@@ -39,6 +44,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@EntityListeners(AuditingEntityListener.class)
 public class Products {
 
     @Id
@@ -98,9 +104,11 @@ public class Products {
     private ProductStatus status;
 
     @Column(nullable = false)
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
@@ -143,6 +151,9 @@ public class Products {
      * 재입고 처리. 품절 상태였다면 판매중으로 복귀시킨다.
      */
     public void restock(int quantity) {
+        if (this.status == ProductStatus.DISCONTINUED) {
+            throw new IllegalStateException("판매중단된 상품은 재입고할 수 없습니다.");
+        }
         if (quantity <= 0) {
             throw new IllegalArgumentException("재입고 수량은 0보다 커야 합니다.");
         }
@@ -180,5 +191,44 @@ public class Products {
      */
     public boolean isMappedToIngredient() {
         return this.ingredientId != null;
+    }
+    public void updateInfo(
+        String name,
+        Long categoryId,
+        Long price,
+        ProductUnit unit,
+        Integer capacity,
+        Integer packageCount,
+        String origin,
+        String description,
+        String thumbnailUrl){
+        if(name != null) {
+            this.name = name;
+        }
+        if(categoryId != null) {
+            this.categoryId = categoryId;
+        }
+        if(price != null) {
+            this.price = price;
+        }
+        if(unit != null) {
+            this.unit = unit;
+        }
+        if(capacity != null) {
+            this.capacity = capacity;
+        }
+        if(packageCount != null) {
+            this.packageCount = packageCount;
+        }
+        if(origin != null) {
+            this.origin = origin;
+        }
+        if(description != null) {
+            this.description = description;
+        }
+        if(thumbnailUrl != null) {
+            this.thumbnailUrl = thumbnailUrl;
+        }
+
     }
 }
