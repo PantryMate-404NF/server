@@ -93,5 +93,18 @@ public class Orders {
         }
         this.status = OrderStatus.FAILED;
     }
+
+    public void requestCancel(){
+        if (!this.status.canTransitionTo(OrderStatus.CANCEL_REQUESTED)) {
+            throw new IllegalStateException("현재 상태에서 취소 요청으로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.CANCEL_REQUESTED;
+    }
+    public void completeCancel(){
+        if (!this.status.canTransitionTo(OrderStatus.CANCELLED)) {
+            throw new IllegalStateException("현재 상태에서 취소 완료로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
 }
 

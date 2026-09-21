@@ -11,6 +11,7 @@ import com.pantrymate.orderpayment.payment.application.dto.PaymentDetailResponse
 import com.pantrymate.orderpayment.payment.application.dto.PaymentPrepareResponse;
 import com.pantrymate.orderpayment.payment.application.dto.StockDeductionItem;
 import com.pantrymate.orderpayment.payment.application.dto.StockDeductionRequest;
+import com.pantrymate.orderpayment.payment.application.dto.StockRestoreRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossCancelRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossConfirmRequest;
 import com.pantrymate.orderpayment.payment.application.dto.TossConfirmResponse;
@@ -141,6 +142,7 @@ public class PaymentService {
         if (!order.getUserId().equals(userId)) {
             throw new BusinessException(OrderErrorCode.ORDER_NOT_FOUND);
         }
+        order.requestCancel();
 
         Payments payment = paymentRepository.findByOrderId(order.getId())
             .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
@@ -149,6 +151,12 @@ public class PaymentService {
         tossPaymentClient.cancelToss(authHeader, payment.getPaymentKey(), request);
         payment.cancel();
         paymentRepository.save(payment);
+
+        List<OrderItems> orderItems = orderItemRepository.findByOrderId(order.getId());
+        List<StockDeductionItem> stockItem = toStockDeductionItems(orderItems);
+        StockRestoreRequest restoreRequest = new StockRestoreRequest(stockItem);
+        productServiceClient.increaseStocks(restoreRequest);
+        order.completeCancel();
         return PaymentDetailResponse.of(payment, order);
     }
 
@@ -158,6 +166,9 @@ public class PaymentService {
                 orderItem.getQuantity()))
             .toList();
     }
+
+
+
 
 
 }

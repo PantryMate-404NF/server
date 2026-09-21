@@ -5,9 +5,9 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/pantrymate_user
-    username: pantrymate
-    password: pantrymate
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/pantrymate_user
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate

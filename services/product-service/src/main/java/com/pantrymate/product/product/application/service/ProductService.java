@@ -13,6 +13,7 @@ import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
 import com.pantrymate.product.product.application.dto.StockDeductionItem;
 import com.pantrymate.product.product.application.dto.StockDeductionRequest;
+import com.pantrymate.product.product.application.dto.StockRestoreRequest;
 import com.pantrymate.product.product.domain.ProductImages;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
@@ -194,5 +195,16 @@ public class ProductService {
         });
     }
 
+
+    @Transactional
+    public void productIncreaseStocks(StockRestoreRequest request) {
+        request.items().forEach(item -> {
+            int updatedRows = productRepository.increaseStockAtomic(item.productId(), item.quantity());
+            if (updatedRows == 0){
+                throw new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND);
+            }
+
+        });
+    }
 
 }

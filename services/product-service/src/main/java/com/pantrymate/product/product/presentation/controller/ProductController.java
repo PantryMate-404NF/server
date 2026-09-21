@@ -13,6 +13,7 @@ import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
 import com.pantrymate.product.product.application.dto.ProductUpdateResponse;
 import com.pantrymate.product.product.application.dto.StockDeductionRequest;
+import com.pantrymate.product.product.application.dto.StockRestoreRequest;
 import com.pantrymate.product.product.application.service.ProductService;
 import com.pantrymate.product.product.domain.Products;
 import jakarta.validation.Valid;
@@ -115,6 +116,14 @@ public class ProductController {
     ){
         productService.productDecreaseStocks(request);
         return ApiResponse.success("재고 차감에 성공하였습니다.");
+    }
+
+    @PostMapping("/increase")
+    public ApiResponse<Void> increaseStock(
+        @RequestBody StockRestoreRequest request
+    ){
+        productService.productIncreaseStocks(request);
+        return ApiResponse.success("재고 복구에 성공하였습니다.");
     }
 
 }

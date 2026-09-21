@@ -19,4 +19,7 @@ public interface ProductRepository {
     Page<Products> findByCategoryIdAndDeletedAtIsNullAndStatusNot(Long categoryId, ProductStatus status, Pageable pageable);
 
     int decreaseStockAtomic(Long productId, Integer quantity);
+
+    int increaseStockAtomic(Long productId, Integer quantity);
+
 }

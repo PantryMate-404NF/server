@@ -38,4 +38,11 @@ public interface ProductJpaRepository extends JpaRepository<Products, Long>, Pro
         + "SET p.stockQuantity = p.stockQuantity - :quantity "
         + "WHERE p.id = :productId AND p.stockQuantity >= :quantity")
     int decreaseStockAtomic(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    @Override
+    @Modifying
+    @Query("UPDATE Products p "
+    + "SET p.stockQuantity = p.stockQuantity + :quantity "
+    + "WHERE p.id = :productId")
+    int increaseStockAtomic(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 }
