@@ -47,15 +47,4 @@ public class DeviceToken {
     void preUpdate() {
         this.updatedAt = OffsetDateTime.now();
     }
-
-    public static DeviceToken create(Long userId, String fcmToken) {
-        DeviceToken deviceToken = new DeviceToken();
-        deviceToken.userId = userId;
-        deviceToken.fcmToken = fcmToken;
-        return deviceToken;
-    }
-
-    public void updateToken(String fcmToken) {
-        this.fcmToken = fcmToken;
-    }
 }

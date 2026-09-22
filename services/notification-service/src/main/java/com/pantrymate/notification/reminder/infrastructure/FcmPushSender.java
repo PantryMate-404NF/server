@@ -38,7 +38,11 @@ public class FcmPushSender implements PushSender {
         try {
             firebaseMessaging.send(fcmMessage);
         } catch (FirebaseMessagingException e) {
-            if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED) {
+            // INVALID_ARGUMENT는 잘못된 등록 토큰 외에 잘못된 데이터·TTL 등에도 쓰이지만,
+            // 이 메시지의 payload/TTL은 고정값(항상 유효)이라 이 요청에서 발생하는
+            // INVALID_ARGUMENT는 사실상 토큰 문제로 판단해도 안전하다.
+            if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED
+                    || e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT) {
                 throw new InvalidPushTokenException("FCM 토큰이 더 이상 유효하지 않습니다", e);
             }
             throw new IllegalStateException("FCM 발송 실패 errorCode=" + e.getMessagingErrorCode(), e);

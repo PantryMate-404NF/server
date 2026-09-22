@@ -15,8 +15,12 @@ RUN ./gradlew :services:notification-service:bootJar --no-daemon
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
+RUN addgroup -S app && adduser -S app -G app
+
 COPY --from=build /workspace/services/notification-service/build/libs/*.jar ./
-RUN rm -f *-plain.jar && mv *.jar app.jar
+RUN rm -f *-plain.jar && mv *.jar app.jar && chown app:app app.jar
+
+USER app
 
 EXPOSE 8085
 

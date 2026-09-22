@@ -1,7 +1,6 @@
 package com.pantrymate.notification.devicetoken.application;
 
 import com.pantrymate.common.exception.BusinessException;
-import com.pantrymate.notification.devicetoken.domain.DeviceToken;
 import com.pantrymate.notification.devicetoken.domain.DeviceTokenRepository;
 import com.pantrymate.notification.devicetoken.domain.exception.DeviceTokenErrorCode;
 import org.springframework.stereotype.Service;
@@ -22,10 +21,6 @@ public class DeviceTokenService {
             throw new BusinessException(DeviceTokenErrorCode.DEVICE_TOKEN_INVALID);
         }
 
-        deviceTokenRepository
-                .findByUserId(userId)
-                .ifPresentOrElse(
-                        existing -> existing.updateToken(fcmToken),
-                        () -> deviceTokenRepository.save(DeviceToken.create(userId, fcmToken)));
+        deviceTokenRepository.upsert(userId, fcmToken);
     }
 }

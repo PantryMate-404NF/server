@@ -42,7 +42,13 @@ public class PantryReminderService {
     }
 
     public void sendWeeklyReminders() {
-        List<Long> userIds = pantryRecipeClient.listPantryItemUserIds().data();
+        List<Long> userIds;
+        try {
+            userIds = pantryRecipeClient.listPantryItemUserIds().data();
+        } catch (RuntimeException e) {
+            log.error("팬트리 보유 유저 조회 실패 — 이번 회차 리마인드를 건너뜁니다", e);
+            return;
+        }
         if (userIds == null || userIds.isEmpty()) {
             log.info("팬트리 리마인드 대상 없음");
             return;
