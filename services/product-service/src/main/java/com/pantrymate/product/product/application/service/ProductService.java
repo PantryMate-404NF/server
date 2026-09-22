@@ -208,9 +208,14 @@ public class ProductService {
     @Transactional
     public void productIncreaseStocks(StockRestoreRequest request) {
         request.items().forEach(item -> {
+            Products product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
             int updatedRows = productRepository.increaseStockAtomic(item.productId(), item.quantity());
             if (updatedRows == 0){
                 throw new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND);
+            }
+            if(product.getStatus() == ProductStatus.ON_SALE){
+                product.markOnSale();
             }
 
         });

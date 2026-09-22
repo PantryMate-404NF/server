@@ -192,6 +192,12 @@ public class Products {
         }
     }
 
+    public void markOnSale() {
+        if(this.stockQuantity > 0 && this.status == ProductStatus.OUT_OF_STOCK) {
+            changeStatus(ProductStatus.ON_SALE);
+        }
+}
+
     /**
      * 팬트리 표준 식재료와의 매핑 여부.
      */
