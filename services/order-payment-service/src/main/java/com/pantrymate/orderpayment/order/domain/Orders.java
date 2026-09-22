@@ -1,5 +1,110 @@
 package com.pantrymate.orderpayment.order.domain;
 
+import com.github.f4b6a3.uuid.UuidCreator;
+import com.pantrymate.orderpayment.order.domain.enums.OrderStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+@Entity
+@Getter
+@Table(name = "orders")
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@EntityListeners(AuditingEntityListener.class)
 public class Orders {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String orderId;
+
+    @Column(unique = true, nullable = false)
+    private String idempotencyKey;
+
+    @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false)
+    private String orderName;
+
+    @Column(nullable = false)
+    private Long totalAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
+
+
+    public static Orders create(Long userId, String orderName, Long totalAmount,
+        String idempotencyKey) {
+        String orderId = "ORDER_" + UuidCreator.getTimeOrderedEpoch().toString().replace("-", "");
+
+        return Orders.builder()
+            .orderId(orderId)
+            .idempotencyKey(idempotencyKey)
+            .userId(userId)
+            .orderName(orderName)
+            .totalAmount(totalAmount)
+            .status(OrderStatus.PENDING)
+            .build();
+    }
+
+    public void confirm() {
+        if (!this.status.canTransitionTo(OrderStatus.CONFIRMED)) {
+            throw new IllegalStateException("현재 상태에서 주문 완료로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.CONFIRMED;
+    }
+
+    public void fail() {
+        if (!this.status.canTransitionTo(OrderStatus.FAILED)) {
+            throw new IllegalStateException("현재 상태에서 주문 실패로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.FAILED;
+    }
+
+    public void requestCancel(){
+        if (!this.status.canTransitionTo(OrderStatus.CANCEL_REQUESTED)) {
+            throw new IllegalStateException("현재 상태에서 취소 요청으로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.CANCEL_REQUESTED;
+    }
+    public void completeCancel(){
+        if (!this.status.canTransitionTo(OrderStatus.CANCELLED)) {
+            throw new IllegalStateException("현재 상태에서 취소 완료로 전환할 수 없습니다.");
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
 }
+

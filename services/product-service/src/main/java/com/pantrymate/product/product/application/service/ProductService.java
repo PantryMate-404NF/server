@@ -1,9 +1,20 @@
 package com.pantrymate.product.product.application.service;
 
+import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.product.category.domain.Categories;
 import com.pantrymate.product.category.domain.exception.CategoryErrorCode;
 import com.pantrymate.product.category.domain.repository.CategoryRepository;
+import com.pantrymate.product.product.application.dto.ProductDetailResponse;
+import com.pantrymate.product.product.application.dto.ProductImageResponse;
+import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
+import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
+import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
+import com.pantrymate.product.product.application.dto.StockDeductionItem;
+import com.pantrymate.product.product.application.dto.StockDeductionRequest;
+import com.pantrymate.product.product.application.dto.StockRestoreRequest;
+import com.pantrymate.product.product.domain.ProductImages;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
 import com.pantrymate.product.product.domain.enums.ProductUnit;
@@ -11,8 +22,11 @@ import com.pantrymate.product.product.domain.exception.ProductErrorCode;
 import com.pantrymate.product.product.domain.repository.ProductImageRepository;
 import com.pantrymate.product.product.domain.repository.ProductRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +58,110 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @Transactional(readOnly = true)
+    public ProductListResponse getProductList(Long categoryId, Pageable pageable) {
+        Page<Products> productPage = (categoryId == null)
+            ? productRepository.findByDeletedAtIsNullAndStatusNot(ProductStatus.DISCONTINUED,
+            pageable)
+            : productRepository.findByCategoryIdAndDeletedAtIsNullAndStatusNot(categoryId,
+                ProductStatus.DISCONTINUED, pageable);
+        Page<ProductSummaryResponse> summaryPages = productPage.map(ProductSummaryResponse::from);
+
+        return ProductListResponse.from(summaryPages);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductDetailResponse getProductDetail(Long productId) {
+        Products product = productRepository.findById(productId)
+            .filter(p -> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        String categoryName = categoryRepository.findById(product.getCategoryId())
+            .map(Categories::getName)
+            .orElse(null);
+
+        List<ProductImageResponse> images = productImageRepository.findByProductIdOrderBySortOrderAsc(
+                productId)
+            .stream()
+            .map(ProductImageResponse::from)
+            .toList();
+
+        return ProductDetailResponse.of(product, categoryName, images);
+
+    }
+
+    @Transactional
+    public Products updateProduct(Long productId, ProductUpdateRequest request) {
+        Products product = productRepository.findById(productId)
+            .filter(p -> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        if (request.categoryId() != null && !categoryRepository.existsById(request.categoryId())) {
+            throw new BusinessException(CategoryErrorCode.CATEGORY_NOT_FOUND);
+        }
+        if(request.thumbnailUrl() != null && request.thumbnailUrl().isBlank()) {
+            throw new BusinessException(ProductErrorCode.THUMBNAIL_REQUIRED);
+        }
+        if (request.price() != null && request.price() <= 0) {
+            throw new BusinessException(ProductErrorCode.INVALID_PRICE);
+        }
+        ProductUnit unit = (request.unit() != null) ? ProductUnit.from(request.unit()) : null;
+
+        product.updateInfo(
+            request.name(),
+            request.categoryId(),
+            request.price(),
+            unit,
+            request.capacity(),
+            request.packageCount(),
+            request.origin(),
+            request.description(),
+            request.thumbnailUrl(),
+            request.ingredientId()
+        );
+        return product;
+    }
+
+    @Transactional
+    public Products restockProduct(Long productId, int quantity) {
+        Products product = productRepository.findById(productId)
+            .filter(p -> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        try{
+            product.restock(quantity);
+        }catch (IllegalArgumentException e){
+            throw new BusinessException(ProductErrorCode.INVALID_QUANTITY);
+        }catch (IllegalStateException e){
+            throw new BusinessException(ProductErrorCode.CANNOT_RESTOCK_DISCONTINUED);
+        }
+        return product;
+    }
+
+    @Transactional
+    public Products discontinueProduct(Long productId) {
+        Products product = productRepository.findById(productId)
+            .filter(p-> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        try{
+            product.discontinue();
+        }catch (IllegalStateException e){
+            throw  new BusinessException(ProductErrorCode.ALREADY_DISCONTINUED);
+        }
+        return product;
+    }
+
+    @Transactional
+    public Products deleteProduct(Long productId) {
+        Products product = productRepository.findById(productId)
+            .filter(p-> !p.isDeleted())
+            .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        try{
+            product.delete();
+        }catch (IllegalStateException e){
+            throw new BusinessException(ProductErrorCode.INVALID_PRODUCT_STATUS);
+        }
+        return product;
+    }
+
+
     private Products buildNewProduct(ProductRegisterRequest request) {
         LocalDateTime now = LocalDateTime.now();
         ProductStatus initialStatus = (request.stockQuantity() == 0)
@@ -67,5 +185,40 @@ public class ProductService {
             .build();
     }
 
+    @Transactional
+    public void productDecreaseStocks(StockDeductionRequest request) {
+        request.items().forEach(item -> {
+            int updatedRows = productRepository.decreaseStockAtomic(item.productId(), item.quantity());
+            if (updatedRows == 0){
+                productRepository.findById(item.productId())
+                    .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+                throw new BusinessException(ProductErrorCode.INSUFFICIENT_STOCK);
+            }
+            Products product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+            if (product.getStockQuantity() == 0 && product.getStatus() == ProductStatus.ON_SALE) {
+                product.markOutOfStock();
+            }
+
+        });
+    }
+
+
+    @Transactional
+    public void productIncreaseStocks(StockRestoreRequest request) {
+        request.items().forEach(item -> {
+            Products product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+            int updatedRows = productRepository.increaseStockAtomic(item.productId(), item.quantity());
+            if (updatedRows == 0){
+                throw new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND);
+            }
+            if(product.getStatus() == ProductStatus.ON_SALE){
+                product.markOnSale();
+            }
+
+        });
+    }
 
 }
