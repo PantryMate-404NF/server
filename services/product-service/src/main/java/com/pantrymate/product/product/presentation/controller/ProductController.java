@@ -14,11 +14,14 @@ import com.pantrymate.product.product.application.dto.ProductRestockResponse;
 import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
 import com.pantrymate.product.product.application.dto.ProductUpdateResponse;
+import com.pantrymate.product.product.application.dto.StockDeductionRequest;
+import com.pantrymate.product.product.application.dto.StockRestoreRequest;
 import com.pantrymate.product.product.application.service.ProductService;
 import com.pantrymate.product.product.domain.Products;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -38,7 +41,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
+    /* 어드민 권한 관련 코드 유저 도메인 담당자 요청 (백로그)
+    @Value("${internal.api.secret")
+    private String internalApiSecret;
 
+    관리가 필요한 Controller의 경우
+    @RequestHeader("X-Internal-Secret") String internalSecret,를 추가하여 admin 권한을
+    확인 후 API를 호출할 수 있도록 함
+    에러코드의 경우 아래와 같이 FORBIDDEN을 반환함
+        if (!internalApiSecret.equals(internalSecret)) {
+        throw new BusinessException(ProductErrorCode.FORBIDDEN);
+    }
+    */
     private final ProductService productService;
 
     @PostMapping
@@ -112,6 +126,22 @@ public class ProductController {
         Products deletedProduct = productService.deleteProduct(productId);
         ProductDeleteResponse response = ProductDeleteResponse.from(deletedProduct);
         return ApiResponse.success("상품이 삭제되었습니다.", response);
+    }
+
+    @PostMapping("/decrease")
+    public ApiResponse<Void> decreaseStock(
+        @RequestBody StockDeductionRequest request
+    ){
+        productService.productDecreaseStocks(request);
+        return ApiResponse.success("재고 차감에 성공하였습니다.");
+    }
+
+    @PostMapping("/increase")
+    public ApiResponse<Void> increaseStock(
+        @RequestBody StockRestoreRequest request
+    ){
+        productService.productIncreaseStocks(request);
+        return ApiResponse.success("재고 복구에 성공하였습니다.");
     }
 
 }

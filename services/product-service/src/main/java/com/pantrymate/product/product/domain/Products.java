@@ -186,12 +186,25 @@ public class Products {
         return this.deletedAt != null;
     }
 
+    public void markOutOfStock() {
+        if (this.stockQuantity == 0 && this.status == ProductStatus.ON_SALE) {
+            changeStatus(ProductStatus.OUT_OF_STOCK);
+        }
+    }
+
+    public void markOnSale() {
+        if(this.stockQuantity > 0 && this.status == ProductStatus.OUT_OF_STOCK) {
+            changeStatus(ProductStatus.ON_SALE);
+        }
+}
+
     /**
      * 팬트리 표준 식재료와의 매핑 여부.
      */
     public boolean isMappedToIngredient() {
         return this.ingredientId != null;
     }
+
     public void updateInfo(
         String name,
         Long categoryId,
@@ -201,32 +214,33 @@ public class Products {
         Integer packageCount,
         String origin,
         String description,
-        String thumbnailUrl){
-        if(name != null) {
+        String thumbnailUrl,
+        Long ingredientId) {
+        if (name != null) {
             this.name = name;
         }
-        if(categoryId != null) {
+        if (categoryId != null) {
             this.categoryId = categoryId;
         }
-        if(price != null) {
+        if (price != null) {
             this.price = price;
         }
-        if(unit != null) {
+        if (unit != null) {
             this.unit = unit;
         }
-        if(capacity != null) {
+        if (capacity != null) {
             this.capacity = capacity;
         }
-        if(packageCount != null) {
+        if (packageCount != null) {
             this.packageCount = packageCount;
         }
-        if(origin != null) {
+        if (origin != null) {
             this.origin = origin;
         }
-        if(description != null) {
+        if (description != null) {
             this.description = description;
         }
-        if(thumbnailUrl != null) {
+        if (thumbnailUrl != null) {
             this.thumbnailUrl = thumbnailUrl;
         }
 

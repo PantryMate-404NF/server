@@ -11,6 +11,9 @@ import com.pantrymate.product.product.application.dto.ProductListResponse;
 import com.pantrymate.product.product.application.dto.ProductRegisterRequest;
 import com.pantrymate.product.product.application.dto.ProductSummaryResponse;
 import com.pantrymate.product.product.application.dto.ProductUpdateRequest;
+import com.pantrymate.product.product.application.dto.StockDeductionItem;
+import com.pantrymate.product.product.application.dto.StockDeductionRequest;
+import com.pantrymate.product.product.application.dto.StockRestoreRequest;
 import com.pantrymate.product.product.domain.ProductImages;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
@@ -111,7 +114,8 @@ public class ProductService {
             request.packageCount(),
             request.origin(),
             request.description(),
-            request.thumbnailUrl()
+            request.thumbnailUrl(),
+            request.ingredientId()
         );
         return product;
     }
@@ -181,5 +185,40 @@ public class ProductService {
             .build();
     }
 
+    @Transactional
+    public void productDecreaseStocks(StockDeductionRequest request) {
+        request.items().forEach(item -> {
+            int updatedRows = productRepository.decreaseStockAtomic(item.productId(), item.quantity());
+            if (updatedRows == 0){
+                productRepository.findById(item.productId())
+                    .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+
+                throw new BusinessException(ProductErrorCode.INSUFFICIENT_STOCK);
+            }
+            Products product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+            if (product.getStockQuantity() == 0 && product.getStatus() == ProductStatus.ON_SALE) {
+                product.markOutOfStock();
+            }
+
+        });
+    }
+
+
+    @Transactional
+    public void productIncreaseStocks(StockRestoreRequest request) {
+        request.items().forEach(item -> {
+            Products product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+            int updatedRows = productRepository.increaseStockAtomic(item.productId(), item.quantity());
+            if (updatedRows == 0){
+                throw new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND);
+            }
+            if(product.getStatus() == ProductStatus.ON_SALE){
+                product.markOnSale();
+            }
+
+        });
+    }
 
 }
