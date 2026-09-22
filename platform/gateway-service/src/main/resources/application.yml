@@ -55,6 +55,13 @@ spring:
                 - Path=/api/categories/**
               filters:
                 - RemoveRequestHeader=Authorization
+            - id: notification-service-notifications
+              uri: ${NOTIFICATION_SERVICE_URI:http://notification-service.default.svc.cluster.local:8085}
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - RemoveRequestHeader=Authorization
+
 # user-service와 반드시 동일해야 하는 JWT 서명 공유 시크릿 (HS256, 최소 32byte)
 security:
   jwt:
