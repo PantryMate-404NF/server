@@ -53,6 +53,8 @@ pipeline {
                     aws ecr describe-images --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1 || \
                     { echo "Push failed and image not in ECR"; exit 1; }
                 fi
+                MANIFEST=$(aws ecr batch-get-image --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG --query 'images[0].imageManifest' --output text)
+                aws ecr put-image --region $AWS_REGION --repository-name $REPO --image-tag latest --image-manifest "$MANIFEST" || true
               '''
             }
           }
@@ -71,6 +73,8 @@ pipeline {
                     aws ecr describe-images --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1 || \
                     { echo "Push failed and image not in ECR"; exit 1; }
                 fi
+                MANIFEST=$(aws ecr batch-get-image --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG --query 'images[0].imageManifest' --output text)
+                aws ecr put-image --region $AWS_REGION --repository-name $REPO --image-tag latest --image-manifest "$MANIFEST" || true
               '''
             }
           }
@@ -89,6 +93,8 @@ pipeline {
                     aws ecr describe-images --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1 || \
                     { echo "Push failed and image not in ECR"; exit 1; }
                 fi
+                MANIFEST=$(aws ecr batch-get-image --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG --query 'images[0].imageManifest' --output text)
+                aws ecr put-image --region $AWS_REGION --repository-name $REPO --image-tag latest --image-manifest "$MANIFEST" || true
               '''
             }
           }
@@ -113,6 +119,8 @@ pipeline {
                     aws ecr describe-images --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1 || \
                     { echo "Push failed and image not in ECR"; exit 1; }
                 fi
+                MANIFEST=$(aws ecr batch-get-image --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG --query 'images[0].imageManifest' --output text)
+                aws ecr put-image --region $AWS_REGION --repository-name $REPO --image-tag latest --image-manifest "$MANIFEST" || true
               '''
             }
           }
@@ -131,6 +139,28 @@ pipeline {
                     aws ecr describe-images --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1 || \
                     { echo "Push failed and image not in ECR"; exit 1; }
                 fi
+                MANIFEST=$(aws ecr batch-get-image --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG --query 'images[0].imageManifest' --output text)
+                aws ecr put-image --region $AWS_REGION --repository-name $REPO --image-tag latest --image-manifest "$MANIFEST" || true
+              '''
+            }
+          }
+        }
+
+        stage('notification') {
+          steps {
+            container('dind') {
+              sh '''
+                REPO=pantry-mate-dev-notification
+                if aws ecr describe-images --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1; then
+                  echo "Image $REPO:$IMAGE_TAG already in ECR, skipping"
+                else
+                  docker build -f services/notification-service/Dockerfile -t $ECR_REGISTRY/$REPO:$IMAGE_TAG .
+                  docker push $ECR_REGISTRY/$REPO:$IMAGE_TAG || \
+                    aws ecr describe-images --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG > /dev/null 2>&1 || \
+                    { echo "Push failed and image not in ECR"; exit 1; }
+                fi
+                MANIFEST=$(aws ecr batch-get-image --region $AWS_REGION --repository-name $REPO --image-ids imageTag=$IMAGE_TAG --query 'images[0].imageManifest' --output text)
+                aws ecr put-image --region $AWS_REGION --repository-name $REPO --image-tag latest --image-manifest "$MANIFEST" || true
               '''
             }
           }
@@ -156,7 +186,7 @@ pipeline {
               git config user.email "jenkins@pantry-mate.internal"
               git config user.name "Jenkins CI"
 
-              for SVC in gateway user product order-payment pantry-recipe; do
+              for SVC in gateway user product order-payment pantry-recipe notification; do
                 REPO="pantry-mate-dev-${SVC}"
                 sed -i "s|image: $ECR_REGISTRY/$REPO:.*|image: $ECR_REGISTRY/$REPO:$IMAGE_TAG|g" \
                   $GITOPS_PATH/deployment-${SVC}.yaml
@@ -187,7 +217,7 @@ pipeline {
     cleanup  {
       container('dind') {
         sh '''
-          for SVC in gateway user product order-payment pantry-recipe; do
+          for SVC in gateway user product order-payment pantry-recipe notification; do
             docker rmi $ECR_REGISTRY/pantry-mate-dev-${SVC}:$IMAGE_TAG || true
           done
         '''
