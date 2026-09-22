@@ -25,16 +25,34 @@ spring:
                 - Path=/api/users/**
               filters:
                 - RemoveRequestHeader=Authorization
-            - id: pantry-recipe-service-pantry-items
-              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+            - id: order-payment-service-cart
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
               predicates:
-                - Path=/api/pantry-items/**
+                - Path=/api/cart/**
               filters:
                 - RemoveRequestHeader=Authorization
-            - id: pantry-recipe-service-recipes
-              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+            - id: order-payment-service-orders
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
               predicates:
-                - Path=/api/recipes/**
+                - Path=/api/orders/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: order-payment-service-payments
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
+              predicates:
+                - Path=/api/payments/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: product-service-products
+              uri: ${PRODUCT_SERVICE_URI:http://product-service.default.svc.cluster.local:8083}
+              predicates:
+                - Path=/api/products/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: product-service-categories
+              uri: ${PRODUCT_SERVICE_URI:http://product-service.default.svc.cluster.local:8083}
+              predicates:
+                - Path=/api/categories/**
               filters:
                 - RemoveRequestHeader=Authorization
             - id: notification-service-notifications
