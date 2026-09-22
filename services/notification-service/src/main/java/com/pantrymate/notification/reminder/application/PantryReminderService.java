@@ -2,6 +2,7 @@ package com.pantrymate.notification.reminder.application;
 
 import com.pantrymate.notification.devicetoken.domain.DeviceToken;
 import com.pantrymate.notification.devicetoken.domain.DeviceTokenRepository;
+import com.pantrymate.notification.reminder.domain.InvalidPushTokenException;
 import com.pantrymate.notification.reminder.domain.PantryReminderLog;
 import com.pantrymate.notification.reminder.domain.PantryReminderLogRepository;
 import com.pantrymate.notification.reminder.domain.PushMessage;
@@ -76,7 +77,13 @@ public class PantryReminderService {
         if (deviceToken.isEmpty()) {
             return false;
         }
-        pushSender.send(deviceToken.get().getFcmToken(), REMINDER_MESSAGE);
+        try {
+            pushSender.send(deviceToken.get().getFcmToken(), REMINDER_MESSAGE);
+        } catch (InvalidPushTokenException e) {
+            deviceTokenRepository.delete(deviceToken.get());
+            log.info("무효 FCM 토큰 삭제 userId={}", userId);
+            return false;
+        }
         pantryReminderLogRepository.save(PantryReminderLog.create(userId));
         return true;
     }

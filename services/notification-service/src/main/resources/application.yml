@@ -20,6 +20,10 @@ spring:
 pantry-recipe:
   service-uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
 
+firebase:
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:}
+  ttl-seconds: ${FIREBASE_TTL_SECONDS:86400}
+
 management:
   endpoints:
     web:

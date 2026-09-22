@@ -3,10 +3,12 @@ package com.pantrymate.notification.reminder.infrastructure;
 import com.pantrymate.notification.reminder.domain.PushMessage;
 import com.pantrymate.notification.reminder.domain.PushSender;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@ConditionalOnExpression("'${firebase.credentials-path:}' == ''")
 public class LoggingPushSender implements PushSender {
 
     @Override
