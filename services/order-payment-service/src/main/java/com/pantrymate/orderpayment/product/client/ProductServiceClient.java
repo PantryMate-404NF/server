@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+/*
+            각 API 호출시 어드민 권한이 필요한 API 호출에는 아래 코드를 붙여 사용해야함.
+            @RequestHeader("X-Internal-Secret") String internalSecret,
+
+ */
 
 @FeignClient(name = "product-service", url="${product-service.url}")
 public interface ProductServiceClient {

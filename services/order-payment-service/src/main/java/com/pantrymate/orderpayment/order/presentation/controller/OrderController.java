@@ -7,6 +7,7 @@ import com.pantrymate.orderpayment.order.application.dto.OrderCreateResponse;
 import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
 import com.pantrymate.orderpayment.order.application.service.OrderService;
 import com.pantrymate.orderpayment.order.domain.Orders;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +36,7 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<OrderCreateResponse> createOrder(CurrentUser currentUser,
         @RequestHeader("Idempotency-Key") String idempotencyKey,
-        @RequestBody OrderCreateRequest request) {
+        @Valid @RequestBody OrderCreateRequest request) {
         Orders order = orderService.createOrder(currentUser.userId(), request, idempotencyKey);
         OrderCreateResponse response = OrderCreateResponse.from(order);
         return ApiResponse.success("정상적으로 주문서 생성이 완료되었습니다.", response);

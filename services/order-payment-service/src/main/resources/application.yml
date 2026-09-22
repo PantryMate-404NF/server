@@ -8,7 +8,7 @@ spring:
       okhttp:
         enabled: true
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/pantrymate_orderpayment
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/pantrymate_orderpayment
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
   jpa:
@@ -16,7 +16,7 @@ spring:
       ddl-auto: update
   data:
     redis:
-      host: localhost
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
 management:
@@ -30,8 +30,11 @@ management:
         enabled: true
 
 product-service:
-  url: http://localhost:8083
+  url: ${PRODUCT_SERVICE_URL:http://localhost:8083}
 
 toss:
   secret-key: ${TOSS_SECRET_KEY}
 
+internal:
+  api:
+    secret: ${INTERNAL_API_SECRET}

@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Slf4j
 @Service
@@ -52,6 +53,9 @@ public class OrderService {
 
         List<CartItems> selectedItems = cartItemRepository.findAllById(
             request.selectedCartItemIds());
+        if(selectedItems.size() != request.selectedCartItemIds().size()) {
+            throw new BusinessException(OrderErrorCode.CART_ITEM_NOT_FOUND);
+        }
         selectedItems.forEach(item -> {
             if (!item.getCartId().equals(cart.getId())) {
                 throw new BusinessException(OrderErrorCode.CART_ITEM_NOT_FOUND);
@@ -69,20 +73,29 @@ public class OrderService {
             .mapToLong(v -> v.product().price() * v.items().getQuantity())
             .sum();
         String orderName = createOrderName(validateItems);
-        Orders order = orderRepository.save(
-            Orders.create(userId, orderName, totalAmount, idempotencyKey));
+        try {
+            Orders order = orderRepository.save(
+                Orders.create(userId, orderName, totalAmount, idempotencyKey));
 
-        List<OrderItems> orderItems = validateItems.stream()
-            .map(v -> OrderItems.create(
-                order.getId(),
-                v.items().getProductId(),
-                v.product().name(),
-                v.product().price(),
-                v.items().getQuantity()
-            ))
-            .toList();
-        orderItemRepository.saveAll(orderItems);
-        return order;
+            List<OrderItems> orderItems = validateItems.stream()
+                .map(v -> OrderItems.create(
+                    order.getId(),
+                    v.items().getProductId(),
+                    v.product().name(),
+                    v.product().price(),
+                    v.items().getQuantity()
+                ))
+                .toList();
+            orderItemRepository.saveAll(orderItems);
+            return order;
+        } catch (DataIntegrityViolationException e) {
+            Orders order = orderRepository.findByIdempotencyKey(idempotencyKey)
+                .orElseThrow(() -> e);
+            if(!order.getUserId().equals(userId)) {
+                throw new BusinessException(OrderErrorCode.INVALID_IDEMPOTENCY_KEY);
+            }
+            return order;
+        }
     }
 
     @Transactional(readOnly = true)

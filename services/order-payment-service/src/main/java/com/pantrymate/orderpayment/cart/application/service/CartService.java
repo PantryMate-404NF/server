@@ -80,7 +80,7 @@ public class CartService {
                     product = productServiceClient.getProductInfo(
                         cartItem.getProductId()).data();
                 }catch (FeignException.NotFound e) {
-                    return null; // 우선 null을 반환하고 추후에 품절상품입니다를 반환하는 메서드나 상품판매가 종료되었다는 메서드 추가
+                    return CartItemResponse.unavailable(cartItem); // 우선 null을 반환하고 추후에 품절상품입니다를 반환하는 메서드나 상품판매가 종료되었다는 메서드 추가
                 }
                     return CartItemResponse.of(cartItem, product);
             })

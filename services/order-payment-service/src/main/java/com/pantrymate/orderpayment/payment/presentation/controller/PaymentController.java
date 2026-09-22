@@ -20,6 +20,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/*
+어드민 권한 백로그 요청으로 제거
+    @Value("${internal.api.secret}")
+    private String internalApiSecret;
+        confirmPayment()에서
+    productServiceClient.decreaseStocks(internalApiSecret, stockRequest);
+
+        cancelPayment()에서
+    productServiceClient.increaseStocks(internalApiSecret, restoreRequest);
+ */
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -33,7 +43,8 @@ public class PaymentController {
         CurrentUser currentUser,
         @PathVariable String orderId
     ) {
-        PaymentPrepareResponse response = paymentService.preparePayment(currentUser.userId(), orderId);
+        PaymentPrepareResponse response = paymentService.preparePayment(currentUser.userId(),
+            orderId);
         return ApiResponse.success("결제가 준비되었습니다.", response);
     }
 
@@ -63,7 +74,7 @@ public class PaymentController {
     ) {
         PaymentDetailResponse response = paymentService.cancelPayment(currentUser.userId(), orderId,
             request.cancelReason());
-        return ApiResponse.success("결제가 취소되었습니다.",  response);
+        return ApiResponse.success("결제가 취소되었습니다.", response);
     }
 
 }

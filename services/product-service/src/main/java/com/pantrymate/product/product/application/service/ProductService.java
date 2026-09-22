@@ -114,7 +114,8 @@ public class ProductService {
             request.packageCount(),
             request.origin(),
             request.description(),
-            request.thumbnailUrl()
+            request.thumbnailUrl(),
+            request.ingredientId()
         );
         return product;
     }
@@ -193,6 +194,11 @@ public class ProductService {
                     .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
                 throw new BusinessException(ProductErrorCode.INSUFFICIENT_STOCK);
+            }
+            Products product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+            if (product.getStockQuantity() == 0 && product.getStatus() == ProductStatus.ON_SALE) {
+                product.markOutOfStock();
             }
 
         });
