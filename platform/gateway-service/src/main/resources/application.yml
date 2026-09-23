@@ -37,6 +37,8 @@ spring:
                 - Path=/api/carts/**
               filters:
                 - RemoveRequestHeader=Authorization
+                - RewritePath=/api/carts/(?<segment>.*), /api/cart/${segment}
+                - RewritePath=/api/carts, /api/cart
             - id: order-payment-service-orders
               uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
               predicates:
