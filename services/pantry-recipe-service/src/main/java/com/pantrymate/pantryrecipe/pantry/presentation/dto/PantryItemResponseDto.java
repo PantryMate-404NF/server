@@ -27,7 +27,6 @@ public record PantryItemResponseDto(
         @Schema(description = "식재료 이미지 URL. 없으면 null", example = "https://cdn.pantrymate.com/pantry-items/1.jpg", nullable = true)
                 String imageUrl) {
 
-    private static final long IMMINENT_THRESHOLD_DAYS = 3;
     private static final int NAME_DISPLAY_MAX_LENGTH = 10;
 
     public static PantryItemResponseDto from(PantryItem pantryItem) {
@@ -39,22 +38,12 @@ public record PantryItemResponseDto(
                 pantryItem.getSellByDate(),
                 pantryItem.getExpiryDate(),
                 dDay,
-                resolveExpiryStatus(dDay),
+                PantryExpiryStatus.fromRemainingDays(dDay),
                 pantryItem.getStorageType(),
                 pantryItem.isExpiryAutoCalculated(),
                 pantryItem.isCookable(),
                 pantryItem.getRegisterType(),
                 pantryItem.getImageUrl());
-    }
-
-    private static PantryExpiryStatus resolveExpiryStatus(long dDay) {
-        if (dDay < 0) {
-            return PantryExpiryStatus.EXPIRED;
-        }
-        if (dDay < IMMINENT_THRESHOLD_DAYS) {
-            return PantryExpiryStatus.IMMINENT;
-        }
-        return PantryExpiryStatus.NORMAL;
     }
 
     private static String truncateName(String name) {

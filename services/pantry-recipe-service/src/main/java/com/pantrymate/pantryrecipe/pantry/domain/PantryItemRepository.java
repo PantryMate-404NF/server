@@ -1,6 +1,7 @@
 package com.pantrymate.pantryrecipe.pantry.domain;
 
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
 
     List<PantryItem> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    List<PantryItem> findByUserIdAndIngredient_IngredientIdIn(Long userId, Collection<Long> ingredientIds);
 
     @Query("SELECT DISTINCT p.userId FROM PantryItem p")
     List<Long> findDistinctUserIds();

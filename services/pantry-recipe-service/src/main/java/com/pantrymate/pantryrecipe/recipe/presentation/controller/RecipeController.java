@@ -8,6 +8,7 @@ import com.pantrymate.pantryrecipe.recipe.application.RecipeService;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingCompleteRequestDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingHistoryResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeDetailResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipePantryMatchResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,7 +55,8 @@ public class RecipeController {
     @Operation(
             summary = "레시피 상세 조회",
             description = "조리 순서와 필요 식재료 목록(식재료 이미지 포함)을 포함한 레시피 상세를 반환한다. "
-                    + "팬트리 보유/부족 재료 판별 및 부족 재료 상품 매핑은 추후 지원 예정이다.")
+                    + "팬트리 보유 여부·매칭 항목은 인증이 필요한 GET /{recipeId}/pantry-match로 별도 조회한다. "
+                    + "부족 재료 상품 매핑은 추후 지원 예정이다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RECIPE-NOTFOUND-ID")
@@ -63,6 +65,23 @@ public class RecipeController {
     public ResponseEntity<ApiResponse<RecipeDetailResponseDto>> detail(@PathVariable Long recipeId) {
         RecipeDetailResponseDto response = recipeService.getById(recipeId);
         return ResponseEntity.ok(ApiResponse.success("레시피 상세 조회가 완료되었습니다.", response));
+    }
+
+    @Operation(
+            summary = "레시피 필요 재료 팬트리 매칭 조회",
+            description = "레시피 필요 재료 각각에 대해 동일 식재료 ID로 매칭되는 로그인 유저의 팬트리 항목(pantryItemId)을 반환한다. "
+                    + "동일 재료가 여러 건 등록돼 있으면 모두 반환하며, 조리완료 시 식재료 정리 대상 조회에도 사용한다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RECIPE-NOTFOUND-ID")
+    })
+    @GetMapping("/{recipeId}/pantry-match")
+    public ResponseEntity<ApiResponse<RecipePantryMatchResponseDto>> pantryMatch(
+            @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
+        RecipePantryMatchResponseDto response = recipeService.getPantryMatch(currentUser.userId(), recipeId);
+        return ResponseEntity.ok(ApiResponse.success("팬트리 매칭 조회가 완료되었습니다.", response));
     }
 
     @Operation(summary = "스크랩 레시피 목록 조회", description = "로그인한 유저가 스크랩한 레시피를 최근 스크랩순으로 조회한다.")
@@ -107,9 +126,9 @@ public class RecipeController {
 
     @Operation(
             summary = "레시피 조리 완료",
-            description = "조리 완료 이력을 저장한다. pantryItemIds를 함께 보내면 팬트리 항목을 삭제한다"
-                    + "요청 바디 또는 pantryItemIds는 생략 가능하며, 이 경우 팬트리는 정리하지 않는다. "
-                    + "정리 대상 팬트리 항목을 찾기 위한 필요 재료-팬트리 매칭 조회는 추후 지원 예정이다.")
+            description = "조리 완료 이력을 저장한다. GET /{recipeId}/pantry-match로 조회한 정리 대상 중 사용자가 선택한 "
+                    + "pantryItemIds를 함께 보내면 이력 저장과 같은 트랜잭션에서 해당 팬트리 항목을 삭제한다. "
+                    + "요청 바디 또는 pantryItemIds는 생략 가능하며, 이 경우 팬트리는 정리하지 않는다.")
     @SecurityRequirement(name = "bearerAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조리 완료 처리 성공"),
