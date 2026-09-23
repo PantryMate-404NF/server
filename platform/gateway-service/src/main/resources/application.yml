@@ -31,6 +31,12 @@ spring:
                 - Path=/api/cart/**
               filters:
                 - RemoveRequestHeader=Authorization
+            - id: order-payment-service-carts
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
+              predicates:
+                - Path=/api/carts/**
+              filters:
+                - RemoveRequestHeader=Authorization
             - id: order-payment-service-orders
               uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
               predicates:
