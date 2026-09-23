@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 
 public enum RecipeErrorCode implements ErrorCode {
     RECIPE_NOTFOUND_ID(HttpStatus.NOT_FOUND, "RECIPE-NOTFOUND-ID", "해당 레시피를 찾을 수 없습니다."),
-    RECIPE_INVALID_FILTER(HttpStatus.BAD_REQUEST, "RECIPE-INVALID-FILTER", "필터 식재료는 최대 3개까지 선택할 수 있습니다.");
+    RECIPE_INVALID_FILTER(HttpStatus.BAD_REQUEST, "RECIPE-INVALID-FILTER", "필터 식재료는 최대 3개까지 선택할 수 있습니다."),
+    RECIPE_INVALID_SEARCH_KEYWORD(HttpStatus.BAD_REQUEST, "RECIPE-INVALID-SEARCH-KEYWORD", "검색어를 입력해주세요.");
 
     private final HttpStatus status;
     private final String code;

@@ -2,6 +2,8 @@ package com.pantrymate.pantryrecipe.recipe.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
+import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.common.exception.CommonErrorCode;
 import com.pantrymate.pantryrecipe.recipe.application.CookingHistoryService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeScrapService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeService;
@@ -9,6 +11,7 @@ import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingCompleteReques
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingHistoryResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeDetailResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeFilterIngredientResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeListResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipePantryMatchResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +19,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,17 +51,21 @@ public class RecipeController {
 
     @Operation(
             summary = "레시피 추천 목록 조회",
-            description = "현재 개발상으로는 개인화 없이 공개된 DB 기본/큐레이션 레시피를 반환한다. "
+            description = "현재 개발상으로는 개인화 없이 공개된 DB 기본/큐레이션 레시피를 페이지 단위로 반환한다. "
                     + "ingredientIds(최대 3개)를 전달하면 해당 식재료가 포함된 레시피를 매칭 개수순으로 우선 노출하고, "
                     + "나머지 레시피를 뒤이어 반환한다(빈 결과 없음).")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "RECIPE-INVALID-FILTER")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400", description = "RECIPE-INVALID-FILTER / COMMON-001(잘못된 페이지 파라미터)")
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RecipeResponseDto>>> list(
-            @RequestParam(required = false) List<Long> ingredientIds) {
-        List<RecipeResponseDto> response = recipeService.getAll(ingredientIds);
+    public ResponseEntity<ApiResponse<RecipeListResponseDto>> list(
+            @RequestParam(required = false) List<Long> ingredientIds,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = toPageable(page, size);
+        RecipeListResponseDto response = recipeService.getAll(ingredientIds, pageable);
         return ResponseEntity.ok(ApiResponse.success("레시피 목록 조회가 완료되었습니다.", response));
     }
 
@@ -107,6 +116,35 @@ public class RecipeController {
             @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
         RecipePantryMatchResponseDto response = recipeService.getPantryMatch(currentUser.userId(), recipeId);
         return ResponseEntity.ok(ApiResponse.success("팬트리 매칭 조회가 완료되었습니다.", response));
+    }
+
+    @Operation(
+            summary = "레시피 검색",
+            description = "레시피명 또는 필요 식재료명에 검색어와 완전히 일치하는 단어가 있는 레시피를 페이지 단위로 조회한다("
+                    + "형태소 분석 없는 단어 단위 풀텍스트 검색이라 부분 문자열은 매칭하지 않음, 예: '카레' 검색 시 "
+                    + "'카레라이스'처럼 다른 단어의 일부로만 포함된 경우는 매칭되지 않음). 레시피명 매칭을 우선 노출하고 "
+                    + "식재료명 매칭이 뒤따르며, 팬트리 보유 여부·개인화 순위는 반영하지 않는다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공(결과 없으면 빈 배열)"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "RECIPE-INVALID-SEARCH-KEYWORD / COMMON-001(잘못된 페이지 파라미터)")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<RecipeListResponseDto>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = toPageable(page, size);
+        RecipeListResponseDto response = recipeService.search(keyword, pageable);
+        return ResponseEntity.ok(ApiResponse.success("레시피 검색이 완료되었습니다.", response));
+    }
+
+    private Pageable toPageable(int page, int size) {
+        if (page < 0 || size <= 0) {
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT);
+        }
+        return PageRequest.of(page, size);
     }
 
     @Operation(summary = "스크랩 레시피 목록 조회", description = "로그인한 유저가 스크랩한 레시피를 최근 스크랩순으로 조회한다.")

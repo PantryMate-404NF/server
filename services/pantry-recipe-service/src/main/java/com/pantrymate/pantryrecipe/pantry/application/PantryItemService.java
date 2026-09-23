@@ -15,6 +15,7 @@ import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemUpdateReque
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +62,8 @@ public class PantryItemService {
     }
 
     @Transactional(readOnly = true)
-    public List<PantryItemResponseDto> getAll(Long userId, String rawStorageType, String rawSort) {
+    public List<PantryItemResponseDto> getAll(
+            Long userId, String rawStorageType, String rawSort, String rawKeyword) {
         StorageType storageType = rawStorageType == null || rawStorageType.isBlank() ? null : validateStorageType(rawStorageType);
         PantrySortType sort = validateSort(rawSort);
 
@@ -77,6 +79,15 @@ public class PantryItemService {
                             ? pantryItemRepository.findByUserIdOrderByImminent(userId)
                             : pantryItemRepository.findByUserIdAndStorageTypeOrderByImminent(userId, storageType);
                 };
+
+        String keyword = rawKeyword == null ? "" : rawKeyword.trim();
+        if (!keyword.isEmpty()) {
+            Set<Long> matchingIds = pantryItemRepository.findMatchingIdsByUserIdAndKeyword(userId, keyword);
+            items = items.stream()
+                    .filter(item -> matchingIds.contains(item.getPantryItemId()))
+                    .toList();
+        }
+
         return items.stream().map(PantryItemResponseDto::from).toList();
     }
 

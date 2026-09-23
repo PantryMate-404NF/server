@@ -14,17 +14,20 @@ import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeFilterIngredien
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeIngredientPantryMatchResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeIngredientPantryMatchResponseDto.MatchedPantryItemResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeIngredientResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeListResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipePantryMatchResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeStepResponseDto;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,28 +53,18 @@ public class RecipeService {
     private static final int MAX_FILTER_INGREDIENTS = 3;
 
     @Transactional(readOnly = true)
-    public List<RecipeResponseDto> getAll(List<Long> ingredientIds) {
-        List<Recipe> recipes = recipeRepository.findByPublishedTrueOrderByRecipeIdAsc();
+    public RecipeListResponseDto getAll(List<Long> ingredientIds, Pageable pageable) {
         if (ingredientIds == null || ingredientIds.isEmpty()) {
-            return recipes.stream().map(RecipeResponseDto::from).toList();
+            Page<RecipeResponseDto> page =
+                    recipeRepository.findByPublishedTrueOrderByRecipeIdAsc(pageable).map(RecipeResponseDto::from);
+            return RecipeListResponseDto.from(page);
         }
         if (ingredientIds.size() > MAX_FILTER_INGREDIENTS) {
             throw new BusinessException(RecipeErrorCode.RECIPE_INVALID_FILTER);
         }
 
-        Set<Long> filterIngredientIds = new HashSet<>(ingredientIds);
-        List<Long> recipeIds = recipes.stream().map(Recipe::getRecipeId).toList();
-        Map<Long, Long> matchCountByRecipeId = recipeIngredientRepository.findByRecipe_RecipeIdIn(recipeIds).stream()
-                .filter(ri -> filterIngredientIds.contains(ri.getIngredient().getIngredientId()))
-                .collect(Collectors.groupingBy(ri -> ri.getRecipe().getRecipeId(), Collectors.counting()));
-
-        return recipes.stream()
-                .sorted(Comparator
-                        .comparingLong((Recipe r) -> matchCountByRecipeId.getOrDefault(r.getRecipeId(), 0L))
-                        .reversed()
-                        .thenComparing(Recipe::getRecipeId))
-                .map(RecipeResponseDto::from)
-                .toList();
+        Page<Long> idPage = recipeRepository.findRecipeIdsRankedByIngredientMatch(ingredientIds, pageable);
+        return RecipeListResponseDto.from(toOrderedRecipePage(idPage));
     }
 
     @Transactional(readOnly = true)
@@ -155,5 +148,27 @@ public class RecipeService {
                 .toList();
 
         return new RecipePantryMatchResponseDto(recipeId, ingredients);
+    }
+
+    @Transactional(readOnly = true)
+    public RecipeListResponseDto search(String keyword, Pageable pageable) {
+        String trimmed = keyword == null ? "" : keyword.trim();
+        if (trimmed.isEmpty()) {
+            throw new BusinessException(RecipeErrorCode.RECIPE_INVALID_SEARCH_KEYWORD);
+        }
+
+        Page<Long> idPage = recipeRepository.searchRecipeIds(trimmed, pageable);
+        return RecipeListResponseDto.from(toOrderedRecipePage(idPage));
+    }
+
+    private Page<RecipeResponseDto> toOrderedRecipePage(Page<Long> idPage) {
+        Map<Long, Recipe> recipeById = recipeRepository.findAllById(idPage.getContent()).stream()
+                .collect(Collectors.toMap(Recipe::getRecipeId, recipe -> recipe));
+        List<RecipeResponseDto> content = idPage.getContent().stream()
+                .map(recipeById::get)
+                .filter(Objects::nonNull)
+                .map(RecipeResponseDto::from)
+                .toList();
+        return new PageImpl<>(content, idPage.getPageable(), idPage.getTotalElements());
     }
 }

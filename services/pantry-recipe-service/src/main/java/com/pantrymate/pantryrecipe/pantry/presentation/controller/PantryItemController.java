@@ -53,7 +53,10 @@ public class PantryItemController {
                 .body(ApiResponse.success("팬트리에 식재료가 성공적으로 등록되었습니다.", response));
     }
 
-    @Operation(summary = "팬트리 식재료 목록 조회", description = "로그인한 유저의 팬트리 식재료를 조회한다. 보관방법 필터링과 정렬 기준 선택을 지원한다.")
+    @Operation(
+            summary = "팬트리 식재료 목록 조회",
+            description = "로그인한 유저의 팬트리 식재료를 조회한다. 보관방법 필터링과 정렬 기준 선택을 지원하며, "
+                    + "keyword를 전달하면 적용 중인 필터·정렬 조건 내에서 식재료명 풀텍스트 검색 결과만 반환한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -68,8 +71,10 @@ public class PantryItemController {
                     String storageType,
             @Parameter(description = "정렬 기준 (RECENT: 최근 등록순(기본값) / IMMINENT: 소비기한 임박순 / OLDEST: 오래된 등록순)")
                     @RequestParam(required = false)
-                    String sort) {
-        List<PantryItemResponseDto> response = pantryItemService.getAll(currentUser.userId(), storageType, sort);
+                    String sort,
+            @Parameter(description = "검색어. 미입력 시 전체 목록 반환") @RequestParam(required = false) String keyword) {
+        List<PantryItemResponseDto> response =
+                pantryItemService.getAll(currentUser.userId(), storageType, sort, keyword);
         return ResponseEntity.ok(ApiResponse.success("팬트리 목록 조회가 완료되었습니다.", response));
     }
 
