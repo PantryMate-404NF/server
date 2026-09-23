@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(
-                                "/actuator/health/**", "/api/auth/authorize/**", "/api/auth/login/**", "/api/auth/reissue")
+                                "/actuator/**", "/api/auth/authorize/**", "/api/auth/login/**", "/api/auth/reissue")
                         .permitAll()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtDecoder(jwtDecoder)))
