@@ -1,6 +1,8 @@
 package com.pantrymate.pantryrecipe.pantry.application;
 
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.pantryrecipe.ingredient.domain.Ingredient;
+import com.pantrymate.pantryrecipe.ingredient.domain.IngredientRepository;
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItemRepository;
@@ -23,14 +25,17 @@ public class PantryItemService {
     private static final int MAX_NAME_LENGTH = 20;
 
     private final PantryItemRepository pantryItemRepository;
+    private final IngredientRepository ingredientRepository;
     private final int defaultFallbackExtensionDays;
     private final int tempSellByToExpiryDays;
 
     public PantryItemService(
             PantryItemRepository pantryItemRepository,
+            IngredientRepository ingredientRepository,
             @Value("${pantry.expiry.default-fallback-extension-days}") int defaultFallbackExtensionDays,
             @Value("${pantry.expiry.temp-sell-by-to-expiry-days}") int tempSellByToExpiryDays) {
         this.pantryItemRepository = pantryItemRepository;
+        this.ingredientRepository = ingredientRepository;
         this.defaultFallbackExtensionDays = defaultFallbackExtensionDays;
         this.tempSellByToExpiryDays = tempSellByToExpiryDays;
     }
@@ -40,9 +45,11 @@ public class PantryItemService {
         String name = validateName(request.ingredientName());
         StorageType storageType = validateStorageType(request.storageType());
         ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate());
+        Ingredient ingredient = matchIngredient(name);
 
         PantryItem pantryItem = PantryItem.createManual(
                 userId,
+                ingredient,
                 name,
                 request.imageUrl(),
                 storageType,
@@ -82,7 +89,9 @@ public class PantryItemService {
         if (pantryItem.getRegisterType() == PantryRegisterType.MANUAL) {
             String name = validateName(request.ingredientName());
             StorageType storageType = validateStorageType(request.storageType());
+            Ingredient ingredient = matchIngredient(name);
             pantryItem.updateManualFields(
+                    ingredient,
                     name,
                     request.imageUrl(),
                     storageType,
@@ -174,6 +183,10 @@ public class PantryItemService {
             return new ResolvedExpiry(sellByDate, sellByDate.plusDays(tempSellByToExpiryDays), true);
         }
         return new ResolvedExpiry(null, LocalDate.now().plusDays(defaultFallbackExtensionDays), true);
+    }
+
+    private Ingredient matchIngredient(String name) {
+        return ingredientRepository.findByNameIgnoreCase(name).orElse(null);
     }
 
     private LocalDate parseDate(String rawDate) {

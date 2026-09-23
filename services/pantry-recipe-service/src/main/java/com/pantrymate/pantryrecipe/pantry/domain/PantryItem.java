@@ -96,6 +96,7 @@ public class PantryItem {
 
     public static PantryItem createManual(
             Long userId,
+            Ingredient ingredient,
             String name,
             String imageUrl,
             StorageType storageType,
@@ -104,6 +105,7 @@ public class PantryItem {
             boolean expiryAutoCalculated) {
         PantryItem pantryItem = new PantryItem();
         pantryItem.userId = userId;
+        pantryItem.ingredient = ingredient;
         pantryItem.name = name;
         pantryItem.imageUrl = imageUrl;
         pantryItem.storageType = storageType;
@@ -116,12 +118,14 @@ public class PantryItem {
     }
 
     public void updateManualFields(
+            Ingredient ingredient,
             String name,
             String imageUrl,
             StorageType storageType,
             LocalDate sellByDate,
             LocalDate expiryDate,
             boolean expiryAutoCalculated) {
+        this.ingredient = ingredient;
         this.name = name;
         this.imageUrl = imageUrl;
         this.storageType = storageType;

@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit;
 
 public record PantryItemResponseDto(
         @Schema(example = "1", requiredMode = Schema.RequiredMode.REQUIRED) Long pantryItemId,
+        @Schema(description = "식재료 사전 매칭 ID. 매칭 실패 시 null", example = "1", nullable = true) Long ingredientId,
         @Schema(example = "양파", requiredMode = Schema.RequiredMode.REQUIRED) String ingredientName,
         @Schema(description = "유통기한. 없으면 null", example = "2026-09-14", nullable = true) LocalDate sellByDate,
         @Schema(example = "2026-09-20", requiredMode = Schema.RequiredMode.REQUIRED) LocalDate expiryDate,
@@ -33,6 +34,7 @@ public record PantryItemResponseDto(
         long dDay = ChronoUnit.DAYS.between(LocalDate.now(), pantryItem.getExpiryDate());
         return new PantryItemResponseDto(
                 pantryItem.getPantryItemId(),
+                pantryItem.getIngredient() == null ? null : pantryItem.getIngredient().getIngredientId(),
                 truncateName(pantryItem.getName()),
                 pantryItem.getSellByDate(),
                 pantryItem.getExpiryDate(),
