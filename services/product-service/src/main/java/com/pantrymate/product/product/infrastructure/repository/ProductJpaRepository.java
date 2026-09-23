@@ -45,4 +45,9 @@ public interface ProductJpaRepository extends JpaRepository<Products, Long>, Pro
     + "SET p.stockQuantity = p.stockQuantity + :quantity "
     + "WHERE p.id = :productId AND :quantity > 0")
     int increaseStockAtomic(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    @Override
+    Page<Products> findByNameContainingAndDeletedAtIsNullAndStatusIn(String name,
+        List<ProductStatus> statuses, Pageable pageable);
+
 }

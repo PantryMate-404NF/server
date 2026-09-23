@@ -221,4 +221,20 @@ public class ProductService {
         });
     }
 
+    @Transactional(readOnly = true)
+    public ProductListResponse searchProducts(String keyword, Pageable pageable) {
+        String trimmedKeyword = keyword.trim();
+
+        Page<Products> productsPage = productRepository.findByNameContainingAndDeletedAtIsNullAndStatusIn(
+            trimmedKeyword,
+            List.of(ProductStatus.ON_SALE, ProductStatus.OUT_OF_STOCK),
+            pageable
+        );
+
+        Page<ProductSummaryResponse> summaryPage = productsPage.map(ProductSummaryResponse::from);
+
+        return ProductListResponse.from(summaryPage);
+    }
+
+
 }

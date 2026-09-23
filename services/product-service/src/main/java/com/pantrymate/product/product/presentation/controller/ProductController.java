@@ -144,4 +144,22 @@ public class ProductController {
         return ApiResponse.success("재고 복구에 성공하였습니다.");
     }
 
+    @GetMapping("/search")
+    public ApiResponse<ProductListResponse> searchProducts(
+        @RequestParam String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "60") int size
+    ) {
+        if (keyword == null || keyword.isBlank()) {
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT);
+        }
+        if (page < 0 || size <= 0) {
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT);
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        ProductListResponse response = productService.searchProducts(keyword, pageable);
+        return ApiResponse.success("상품 검색이 완료되었습니다.", response);
+    }
+
 }

@@ -5,6 +5,7 @@ import com.pantrymate.orderpayment.cart.domain.CartItems;
 import com.pantrymate.orderpayment.cart.domain.Carts;
 import com.pantrymate.orderpayment.cart.domain.repository.CartItemRepository;
 import com.pantrymate.orderpayment.cart.domain.repository.CartRepository;
+import com.pantrymate.orderpayment.order.application.dto.DirectOrderRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
 import com.pantrymate.orderpayment.order.application.dto.OrderSummaryResponse;
@@ -53,7 +54,7 @@ public class OrderService {
 
         List<CartItems> selectedItems = cartItemRepository.findAllById(
             request.selectedCartItemIds());
-        if(selectedItems.size() != request.selectedCartItemIds().size()) {
+        if (selectedItems.size() != request.selectedCartItemIds().size()) {
             throw new BusinessException(OrderErrorCode.CART_ITEM_NOT_FOUND);
         }
         selectedItems.forEach(item -> {
@@ -91,7 +92,7 @@ public class OrderService {
         } catch (DataIntegrityViolationException e) {
             Orders order = orderRepository.findByIdempotencyKey(idempotencyKey)
                 .orElseThrow(() -> e);
-            if(!order.getUserId().equals(userId)) {
+            if (!order.getUserId().equals(userId)) {
                 throw new BusinessException(OrderErrorCode.INVALID_IDEMPOTENCY_KEY);
             }
             return order;
@@ -107,6 +108,44 @@ public class OrderService {
         );
         Page<OrderSummaryResponse> summaryPage = orderPage.map(OrderSummaryResponse::from);
         return OrderListResponse.from(summaryPage);
+    }
+
+    @Transactional
+    public Orders createDirectOrder(Long userId, DirectOrderRequest request,
+        String idempotencyKey) {
+        Optional<Orders> existingOrder = orderRepository.findByIdempotencyKey(idempotencyKey);
+        if (existingOrder.isPresent()) {
+            Orders order = existingOrder.get();
+
+            if (!order.getUserId().equals(userId)) {
+                throw new BusinessException(OrderErrorCode.INVALID_IDEMPOTENCY_KEY);
+            }
+            return order;
+        }
+        ProductInfoResponse infoResponse = productServiceClient.getProductInfo(request.productId())
+            .data();
+        validateProductAvailable(infoResponse, request.quantity());
+
+        Long totalAmount = infoResponse.price() * request.quantity();
+        String orderName = infoResponse.name();
+
+        try {
+            Orders order = orderRepository.save(
+                Orders.create(userId, orderName, totalAmount, idempotencyKey));
+            OrderItems orderItem = OrderItems.create(order.getId(), infoResponse.productId(),
+                orderName, infoResponse.price(), request.quantity());
+            orderItemRepository.save(orderItem);
+            return order;
+        } catch (DataIntegrityViolationException e) {
+            Orders order = orderRepository.findByIdempotencyKey(idempotencyKey)
+                .orElseThrow(() -> e);
+            if (!order.getUserId().equals(userId)) {
+                throw new BusinessException(OrderErrorCode.INVALID_IDEMPOTENCY_KEY);
+            }
+            return order;
+        }
+
+
     }
 
     private record validateItem(CartItems items, ProductInfoResponse product) {

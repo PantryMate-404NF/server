@@ -9,17 +9,27 @@ import org.springframework.data.domain.Pageable;
 
 
 public interface ProductRepository {
+
     Products save(Products product);
+
     Optional<Products> findBySku(String sku);
+
     boolean existsBySku(String sku);
+
     List<Products> findByCategoryId(Long categoryId);
+
     Optional<Products> findById(Long id);
 
     Page<Products> findByDeletedAtIsNullAndStatusNot(ProductStatus status, Pageable pageable);
-    Page<Products> findByCategoryIdAndDeletedAtIsNullAndStatusNot(Long categoryId, ProductStatus status, Pageable pageable);
+
+    Page<Products> findByCategoryIdAndDeletedAtIsNullAndStatusNot(Long categoryId,
+        ProductStatus status, Pageable pageable);
 
     int decreaseStockAtomic(Long productId, Integer quantity);
 
     int increaseStockAtomic(Long productId, Integer quantity);
+
+    Page<Products> findByNameContainingAndDeletedAtIsNullAndStatusIn(String name,
+        List<ProductStatus> statuses, Pageable pageable);
 
 }
