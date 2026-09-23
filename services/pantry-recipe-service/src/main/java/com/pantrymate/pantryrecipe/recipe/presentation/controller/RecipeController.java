@@ -8,6 +8,7 @@ import com.pantrymate.pantryrecipe.recipe.application.RecipeService;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingCompleteRequestDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingHistoryResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeDetailResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeFilterIngredientResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipePantryMatchResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "RECIPE", description = "레시피 추천 및 상세")
@@ -42,14 +44,37 @@ public class RecipeController {
         this.cookingHistoryService = cookingHistoryService;
     }
 
-    @Operation(summary = "레시피 추천 목록 조회", description = "현재 개발상으로는 개인화 없이 공개된 DB 기본/큐레이션 레시피를 반환한다.")
+    @Operation(
+            summary = "레시피 추천 목록 조회",
+            description = "현재 개발상으로는 개인화 없이 공개된 DB 기본/큐레이션 레시피를 반환한다. "
+                    + "ingredientIds(최대 3개)를 전달하면 해당 식재료가 포함된 레시피를 매칭 개수순으로 우선 노출하고, "
+                    + "나머지 레시피를 뒤이어 반환한다(빈 결과 없음).")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "RECIPE-INVALID-FILTER")
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RecipeResponseDto>>> list() {
-        List<RecipeResponseDto> response = recipeService.getAll();
+    public ResponseEntity<ApiResponse<List<RecipeResponseDto>>> list(
+            @RequestParam(required = false) List<Long> ingredientIds) {
+        List<RecipeResponseDto> response = recipeService.getAll(ingredientIds);
         return ResponseEntity.ok(ApiResponse.success("레시피 목록 조회가 완료되었습니다.", response));
+    }
+
+    @Operation(
+            summary = "레시피 필터용 팬트리 식재료 후보 조회",
+            description = "로그인 유저의 팬트리 식재료 중 레시피 필요 재료와 매칭 가능한(ingredient_id가 있는) 항목을 "
+                    + "식재료 단위로 반환한다. 소비기한이 지났어도 삭제되지 않았으면 포함하되 expired로 구분 표시하며, "
+                    + "소비기한이 지나지 않은 식재료 중 잔여기간이 가장 짧은 최대 3개는 defaultSelected=true로 표시한다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED")
+    })
+    @GetMapping("/filter-ingredients")
+    public ResponseEntity<ApiResponse<List<RecipeFilterIngredientResponseDto>>> filterIngredients(
+            @Parameter(hidden = true) CurrentUser currentUser) {
+        List<RecipeFilterIngredientResponseDto> response = recipeService.getFilterIngredients(currentUser.userId());
+        return ResponseEntity.ok(ApiResponse.success("필터 식재료 후보 조회가 완료되었습니다.", response));
     }
 
     @Operation(

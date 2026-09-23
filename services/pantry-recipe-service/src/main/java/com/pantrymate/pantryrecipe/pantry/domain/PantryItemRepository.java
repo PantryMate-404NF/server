@@ -13,6 +13,8 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
 
     List<PantryItem> findByUserIdAndIngredient_IngredientIdIn(Long userId, Collection<Long> ingredientIds);
 
+    List<PantryItem> findByUserIdAndIngredientIsNotNull(Long userId);
+
     @Query("SELECT DISTINCT p.userId FROM PantryItem p")
     List<Long> findDistinctUserIds();
 
