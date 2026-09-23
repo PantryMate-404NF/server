@@ -55,6 +55,18 @@ spring:
                 - Path=/api/categories/**
               filters:
                 - RemoveRequestHeader=Authorization
+            - id: pantry-recipe-service-pantry-items
+              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+              predicates:
+                - Path=/api/pantry-items/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: pantry-recipe-service-recipes
+              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+              predicates:
+                - Path=/api/recipes/**
+              filters:
+                - RemoveRequestHeader=Authorization
             - id: notification-service-notifications
               uri: ${NOTIFICATION_SERVICE_URI:http://notification-service.default.svc.cluster.local:8085}
               predicates:
