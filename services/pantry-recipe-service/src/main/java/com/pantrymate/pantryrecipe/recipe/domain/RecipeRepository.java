@@ -1,10 +1,12 @@
 package com.pantrymate.pantryrecipe.recipe.domain;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,6 +15,18 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     Page<Recipe> findByPublishedTrueOrderByRecipeIdAsc(Pageable pageable);
 
     Optional<Recipe> findByRecipeIdAndPublishedTrue(Long recipeId);
+
+    List<Recipe> findByRecipeIdGreaterThanOrderByRecipeIdAsc(Long recipeId, Pageable pageable);
+
+    List<Recipe> findByRecipeIdGreaterThanAndUpdatedAtAfterOrderByRecipeIdAsc(
+            Long recipeId, OffsetDateTime updatedAfter, Pageable pageable);
+
+    long countByUpdatedAtAfter(OffsetDateTime updatedAfter);
+
+    /** updated_at은 건드리지 않는다(조회수 때문에 AI 증분 동기화 대상이 되지 않도록). */
+    @Modifying
+    @Query("UPDATE Recipe r SET r.viewCount = r.viewCount + 1 WHERE r.recipeId = :recipeId")
+    int incrementViewCount(@Param("recipeId") Long recipeId);
 
     @Query(
             value =

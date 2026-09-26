@@ -6,6 +6,7 @@ import com.pantrymate.common.exception.BusinessException;
 import com.pantrymate.common.exception.CommonErrorCode;
 import com.pantrymate.pantryrecipe.pantry.application.DeliveryAutoRegisterService;
 import com.pantrymate.pantryrecipe.recipe.application.CookingHistoryService;
+import com.pantrymate.pantryrecipe.recipe.application.RecipeRecommendService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeScrapService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeService;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.CookingCompleteRequestDto;
@@ -15,6 +16,7 @@ import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeFilterIngredien
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeListResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipePantryMatchResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeProductMatchResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeRecommendResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,16 +47,47 @@ public class RecipeController {
     private final RecipeScrapService recipeScrapService;
     private final CookingHistoryService cookingHistoryService;
     private final DeliveryAutoRegisterService deliveryAutoRegisterService;
+    private final RecipeRecommendService recipeRecommendService;
 
     public RecipeController(
             RecipeService recipeService,
             RecipeScrapService recipeScrapService,
             CookingHistoryService cookingHistoryService,
-            DeliveryAutoRegisterService deliveryAutoRegisterService) {
+            DeliveryAutoRegisterService deliveryAutoRegisterService,
+            RecipeRecommendService recipeRecommendService) {
         this.recipeService = recipeService;
         this.recipeScrapService = recipeScrapService;
         this.cookingHistoryService = cookingHistoryService;
         this.deliveryAutoRegisterService = deliveryAutoRegisterService;
+        this.recipeRecommendService = recipeRecommendService;
+    }
+
+    @Operation(
+            summary = "개인화 레시피 추천",
+            description = "AI 추천 서버가 사용자의 팬트리(요리가능 재료)와 알레르기를 반영해 추천한 레시피를 순위 순으로 반환한다. "
+                    + "source=AI면 requestId를 이후 행동 이벤트에 함께 보내야 하고, AI를 쓸 수 없으면 source=POPULARITY(스크랩 수 기준, "
+                    + "알레르기 재료 제외)로 대체된다. 알레르기 정보를 조회하지 못하면 안전을 위해 503을 반환한다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400", description = "COMMON-001(size 1~100, maxMinutes 1 이상)"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "503", description = "RECIPE-UNAVAILABLE-RECOMMEND")
+    })
+    @GetMapping("/recommendations")
+    public ResponseEntity<ApiResponse<RecipeRecommendResponseDto>> recommendations(
+            @Parameter(hidden = true) CurrentUser currentUser,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Integer maxMinutes) {
+        if (size <= 0 || size > MAX_PAGE_SIZE || (maxMinutes != null && maxMinutes <= 0)) {
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT);
+        }
+        deliveryAutoRegisterService.syncUser(currentUser.userId());
+        RecipeRecommendResponseDto response =
+                recipeRecommendService.recommend(currentUser.userId(), size, maxMinutes);
+        return ResponseEntity.ok(ApiResponse.success("추천 레시피 조회가 완료되었습니다.", response));
     }
 
     @Operation(
@@ -104,8 +138,12 @@ public class RecipeController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RECIPE-NOTFOUND-ID")
     })
     @GetMapping("/{recipeId}")
-    public ResponseEntity<ApiResponse<RecipeDetailResponseDto>> detail(@PathVariable Long recipeId) {
-        RecipeDetailResponseDto response = recipeService.getById(recipeId);
+    public ResponseEntity<ApiResponse<RecipeDetailResponseDto>> detail(
+            @PathVariable Long recipeId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @Parameter(description = "추천 목록에서 들어온 경우 추천 응답의 requestId(AI 학습용)") @RequestParam(required = false) String requestId,
+            @Parameter(description = "추천 목록에서의 순위(1부터)") @RequestParam(required = false) Integer position) {
+        RecipeDetailResponseDto response = recipeService.getById(recipeId, userId, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("레시피 상세 조회가 완료되었습니다.", response));
     }
 
@@ -200,8 +238,11 @@ public class RecipeController {
     })
     @PostMapping("/{recipeId}/scrap")
     public ResponseEntity<ApiResponse<Void>> scrap(
-            @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
-        recipeScrapService.scrap(currentUser.userId(), recipeId);
+            @Parameter(hidden = true) CurrentUser currentUser,
+            @PathVariable Long recipeId,
+            @Parameter(description = "추천 목록에서 들어온 경우 추천 응답의 requestId(AI 학습용)") @RequestParam(required = false) String requestId,
+            @Parameter(description = "추천 목록에서의 순위(1부터)") @RequestParam(required = false) Integer position) {
+        recipeScrapService.scrap(currentUser.userId(), recipeId, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("레시피를 스크랩했습니다.", null));
     }
 
@@ -213,8 +254,11 @@ public class RecipeController {
     })
     @DeleteMapping("/{recipeId}/scrap")
     public ResponseEntity<ApiResponse<Void>> unscrap(
-            @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
-        recipeScrapService.unscrap(currentUser.userId(), recipeId);
+            @Parameter(hidden = true) CurrentUser currentUser,
+            @PathVariable Long recipeId,
+            @Parameter(description = "추천 목록에서 들어온 경우 추천 응답의 requestId(AI 학습용)") @RequestParam(required = false) String requestId,
+            @Parameter(description = "추천 목록에서의 순위(1부터)") @RequestParam(required = false) Integer position) {
+        recipeScrapService.unscrap(currentUser.userId(), recipeId, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("레시피 스크랩을 해제했습니다.", null));
     }
 
@@ -236,8 +280,10 @@ public class RecipeController {
             @PathVariable Long recipeId,
             @RequestBody(required = false) CookingCompleteRequestDto request) {
         List<Long> pantryItemIds = request == null ? null : request.pantryItemIds();
+        String requestId = request == null ? null : request.requestId();
+        Integer position = request == null ? null : request.position();
         CookingHistoryResponseDto response =
-                cookingHistoryService.complete(currentUser.userId(), recipeId, pantryItemIds);
+                cookingHistoryService.complete(currentUser.userId(), recipeId, pantryItemIds, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("조리 완료가 기록되었습니다.", response));
     }
 }

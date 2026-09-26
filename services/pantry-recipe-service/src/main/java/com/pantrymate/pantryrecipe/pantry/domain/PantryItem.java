@@ -100,6 +100,7 @@ public class PantryItem {
             String name,
             String imageUrl,
             StorageType storageType,
+            LocalDate purchaseDate,
             LocalDate sellByDate,
             LocalDate expiryDate,
             boolean expiryAutoCalculated) {
@@ -109,6 +110,7 @@ public class PantryItem {
         pantryItem.name = name;
         pantryItem.imageUrl = imageUrl;
         pantryItem.storageType = storageType;
+        pantryItem.purchaseDate = purchaseDate;
         pantryItem.sellByDate = sellByDate;
         pantryItem.expiryDate = expiryDate;
         pantryItem.expiryAutoCalculated = expiryAutoCalculated;

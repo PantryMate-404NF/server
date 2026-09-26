@@ -21,7 +21,9 @@ public enum UserErrorCode implements ErrorCode {
     ADDRESS_NOTFOUND(HttpStatus.NOT_FOUND, "USER-NOTFOUND-ADDRESS", "존재하지 않는 배송지입니다."),
 
     ONBOARD_INVALID_INPUT(HttpStatus.BAD_REQUEST, "ONBOARD-INVALID-INPUT", "가족 구성원 수는 1명 이상이어야 합니다."),
-    ONBOARD_NOTFOUND_PREFERENCE(HttpStatus.NOT_FOUND, "ONBOARD-NOTFOUND-PREFERENCE", "온보딩 설정 정보를 찾을 수 없습니다.");
+    ONBOARD_NOTFOUND_PREFERENCE(HttpStatus.NOT_FOUND, "ONBOARD-NOTFOUND-PREFERENCE", "온보딩 설정 정보를 찾을 수 없습니다."),
+    ONBOARD_UNAVAILABLE_FOODS(
+            HttpStatus.SERVICE_UNAVAILABLE, "ONBOARD-UNAVAILABLE-FOODS", "음식 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
 
     private final HttpStatus status;
     private final String code;

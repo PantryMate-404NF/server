@@ -1,5 +1,6 @@
 package com.pantrymate.pantryrecipe.recipe.domain;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,5 +21,10 @@ public interface RecipeScrapRepository extends JpaRepository<RecipeScrap, Long> 
                             + "VALUES (:userId, :recipeId, CURRENT_TIMESTAMP) "
                             + "ON CONFLICT (user_id, recipe_id) DO NOTHING",
             nativeQuery = true)
-    void insertIfAbsent(@Param("userId") Long userId, @Param("recipeId") Long recipeId);
+    int insertIfAbsent(@Param("userId") Long userId, @Param("recipeId") Long recipeId);
+
+    @Query(
+            "SELECT new com.pantrymate.pantryrecipe.recipe.domain.RecipeScrapCount(s.recipe.recipeId, COUNT(s)) "
+                    + "FROM RecipeScrap s WHERE s.recipe.recipeId IN :recipeIds GROUP BY s.recipe.recipeId")
+    List<RecipeScrapCount> countByRecipeIds(@Param("recipeIds") Collection<Long> recipeIds);
 }

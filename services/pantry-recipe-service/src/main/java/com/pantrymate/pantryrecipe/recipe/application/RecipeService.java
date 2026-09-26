@@ -1,6 +1,7 @@
 package com.pantrymate.pantryrecipe.recipe.application;
 
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.pantryrecipe.ai.application.AiEventRecorder;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItemRepository;
 import com.pantrymate.pantryrecipe.recipe.domain.ProductCandidate;
@@ -46,18 +47,21 @@ public class RecipeService {
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final PantryItemRepository pantryItemRepository;
     private final ProductCatalog productCatalog;
+    private final AiEventRecorder aiEventRecorder;
 
     public RecipeService(
             RecipeRepository recipeRepository,
             RecipeStepRepository recipeStepRepository,
             RecipeIngredientRepository recipeIngredientRepository,
             PantryItemRepository pantryItemRepository,
-            ProductCatalog productCatalog) {
+            ProductCatalog productCatalog,
+            AiEventRecorder aiEventRecorder) {
         this.recipeRepository = recipeRepository;
         this.recipeStepRepository = recipeStepRepository;
         this.recipeIngredientRepository = recipeIngredientRepository;
         this.pantryItemRepository = pantryItemRepository;
         this.productCatalog = productCatalog;
+        this.aiEventRecorder = aiEventRecorder;
     }
 
     private static final int MAX_FILTER_INGREDIENTS = 3;
@@ -110,11 +114,16 @@ public class RecipeService {
         return result;
     }
 
-    @Transactional(readOnly = true)
-    public RecipeDetailResponseDto getById(Long recipeId) {
+    @Transactional
+    public RecipeDetailResponseDto getById(Long recipeId, Long userId, String requestId, Integer position) {
         Recipe recipe = recipeRepository
                 .findByRecipeIdAndPublishedTrue(recipeId)
                 .orElseThrow(() -> new BusinessException(RecipeErrorCode.RECIPE_NOTFOUND_ID));
+        recipeRepository.incrementViewCount(recipeId);
+        if (requestId != null) {
+            // 추천 목록에서 들어온 클릭만 AI에 알린다(추천과 연결할 request_id가 있을 때).
+            aiEventRecorder.record(userId, AiEventRecorder.CLICK, recipeId, requestId, position);
+        }
 
         List<RecipeStepResponseDto> steps = recipeStepRepository
                 .findByRecipe_RecipeIdOrderByStepNumberAsc(recipeId)
