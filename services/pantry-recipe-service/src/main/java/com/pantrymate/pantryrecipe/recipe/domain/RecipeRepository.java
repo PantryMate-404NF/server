@@ -1,5 +1,6 @@
 package com.pantrymate.pantryrecipe.recipe.domain;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,13 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     Page<Recipe> findByPublishedTrueOrderByRecipeIdAsc(Pageable pageable);
 
     Optional<Recipe> findByRecipeIdAndPublishedTrue(Long recipeId);
+
+    List<Recipe> findByRecipeIdGreaterThanOrderByRecipeIdAsc(Long recipeId, Pageable pageable);
+
+    List<Recipe> findByRecipeIdGreaterThanAndUpdatedAtAfterOrderByRecipeIdAsc(
+            Long recipeId, OffsetDateTime updatedAfter, Pageable pageable);
+
+    long countByUpdatedAtAfter(OffsetDateTime updatedAfter);
 
     @Query(
             value =

@@ -29,18 +29,31 @@ spring:
           product-service:
             connect-timeout: 500
             read-timeout: 3000
+          user-service:
+            connect-timeout: 500
+            read-timeout: 1500
 
 ai:
+  sync:
+    # AI 서버가 /internal/ai/**를 호출할 때 보내는 X-Internal-Api-Key 값
+    internal-api-key: ${AI_INTERNAL_API_KEY}
+    # is_staple/allergens는 V5 시딩 이후 응답에 싣는다. 시딩되지 않은 환경에서 true면 기본값(false/빈 배열)이 AI 쪽 사전값을 덮어쓰므로 주의.
+    include-curated-ingredient-fields: true
   ocr:
     base-url: ${AI_OCR_BASE_URL:http://ai-serving-svc:8000}
     internal-api-key: ${AI_INTERNAL_API_KEY}
     timeout-seconds: ${AI_OCR_TIMEOUT_SECONDS:30}
   recommend:
     base-url: ${AI_RECOMMEND_BASE_URL:http://ai-serving-svc:8000}
-    timeout-ms: ${AI_RECOMMEND_TIMEOUT_MS:1000}
+    internal-api-key: ${AI_INTERNAL_API_KEY}
+    # AI 서버는 추천을 3초 안에 답하므로 여유를 조금 둔다
+    timeout-ms: ${AI_RECOMMEND_TIMEOUT_MS:3500}
 
 product-service:
   url: ${PRODUCT_SERVICE_URL:http://product-service.default.svc.cluster.local:8083}
+
+user-service:
+  url: ${USER_SERVICE_URL:http://user-service.default.svc.cluster.local:8081}
 
 order-payment-service:
   url: ${ORDER_PAYMENT_SERVICE_URL:http://order-payment-service.default.svc.cluster.local:8084}
