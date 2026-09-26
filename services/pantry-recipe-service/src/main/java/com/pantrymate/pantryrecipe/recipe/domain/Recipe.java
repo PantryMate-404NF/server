@@ -58,6 +58,10 @@ public class Recipe {
     @Column(name = "is_published", nullable = false)
     private boolean published;
 
+    // 증가는 RecipeRepository.incrementViewCount로만 한다(엔티티 저장이 동시 증가분을 덮어쓰지 않도록 쓰기 제외).
+    @Column(name = "view_count", nullable = false, insertable = false, updatable = false)
+    private long viewCount;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 

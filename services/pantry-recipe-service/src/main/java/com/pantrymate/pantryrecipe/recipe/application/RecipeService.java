@@ -110,11 +110,12 @@ public class RecipeService {
         return result;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public RecipeDetailResponseDto getById(Long recipeId) {
         Recipe recipe = recipeRepository
                 .findByRecipeIdAndPublishedTrue(recipeId)
                 .orElseThrow(() -> new BusinessException(RecipeErrorCode.RECIPE_NOTFOUND_ID));
+        recipeRepository.incrementViewCount(recipeId);
 
         List<RecipeStepResponseDto> steps = recipeStepRepository
                 .findByRecipe_RecipeIdOrderByStepNumberAsc(recipeId)

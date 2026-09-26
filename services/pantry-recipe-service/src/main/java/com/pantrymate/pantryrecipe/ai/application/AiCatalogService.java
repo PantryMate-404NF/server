@@ -99,7 +99,7 @@ public class AiCatalogService {
                         recipe.isPublished(),
                         recipe.getUpdatedAt().toInstant(),
                         ingredientsByRecipeId.getOrDefault(recipe.getRecipeId(), List.of()),
-                        new Popularity(0, scrapCountByRecipeId.getOrDefault(recipe.getRecipeId(), 0L), 0),
+                        new Popularity(recipe.getViewCount(), scrapCountByRecipeId.getOrDefault(recipe.getRecipeId(), 0L), 0),
                         new Rating(null, 0)))
                 .toList();
 
