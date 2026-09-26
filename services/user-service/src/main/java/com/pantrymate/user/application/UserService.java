@@ -102,6 +102,7 @@ public class UserService {
             return;
         }
         if (preferredFoodTypes.size() > MAX_PREFERRED_FOOD_TYPES
+                || preferredFoodTypes.contains(null)
                 || !ALLOWED_PREFERRED_FOOD_TYPES.containsAll(preferredFoodTypes)
                 || new HashSet<>(preferredFoodTypes).size() != preferredFoodTypes.size()) {
             throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
@@ -112,7 +113,9 @@ public class UserService {
         if (allergies == null) {
             return;
         }
-        if (!ALLOWED_ALLERGIES.containsAll(allergies) || new HashSet<>(allergies).size() != allergies.size()) {
+        if (allergies.contains(null)
+                || !ALLOWED_ALLERGIES.containsAll(allergies)
+                || new HashSet<>(allergies).size() != allergies.size()) {
             throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
         }
     }
