@@ -18,6 +18,10 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
 
     boolean existsByOrderItemId(Long orderItemId);
 
+    @Query("SELECT p FROM PantryItem p JOIN FETCH p.ingredient i "
+            + "WHERE p.userId = :userId AND p.cookable = true AND i.staple = false")
+    List<PantryItem> findCookableNonStapleByUserId(@Param("userId") Long userId);
+
     @Query("SELECT DISTINCT p.userId FROM PantryItem p")
     List<Long> findDistinctUserIds();
 
