@@ -16,6 +16,10 @@ public enum UserErrorCode implements ErrorCode {
     USER_NOTFOUND_ID(HttpStatus.NOT_FOUND, "USER-NOTFOUND-ID", "존재하지 않는 회원입니다."),
     USER_INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "USER-INVALID-NICKNAME", "닉네임은 2자 이상 20자 이하로 입력해 주세요."),
 
+    ADDRESS_INVALID_INPUT(HttpStatus.BAD_REQUEST, "USER-INVALID-ADDRESS", "배송지 입력값이 올바르지 않습니다."),
+    ADDRESS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "USER-LIMIT-ADDRESS", "배송지는 최대 10개까지 등록할 수 있습니다."),
+    ADDRESS_NOTFOUND(HttpStatus.NOT_FOUND, "USER-NOTFOUND-ADDRESS", "존재하지 않는 배송지입니다."),
+
     ONBOARD_INVALID_INPUT(HttpStatus.BAD_REQUEST, "ONBOARD-INVALID-INPUT", "가족 구성원 수는 1명 이상이어야 합니다."),
     ONBOARD_NOTFOUND_PREFERENCE(HttpStatus.NOT_FOUND, "ONBOARD-NOTFOUND-PREFERENCE", "온보딩 설정 정보를 찾을 수 없습니다.");
 
