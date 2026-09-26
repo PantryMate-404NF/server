@@ -2,6 +2,7 @@ package com.pantrymate.pantryrecipe.pantry.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
+import com.pantrymate.pantryrecipe.pantry.application.DeliveryAutoRegisterService;
 import com.pantrymate.pantryrecipe.pantry.application.PantryItemService;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemCreateRequestDto;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemResponseDto;
@@ -30,9 +31,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class PantryItemController {
 
     private final PantryItemService pantryItemService;
+    private final DeliveryAutoRegisterService deliveryAutoRegisterService;
 
-    public PantryItemController(PantryItemService pantryItemService) {
+    public PantryItemController(
+            PantryItemService pantryItemService, DeliveryAutoRegisterService deliveryAutoRegisterService) {
         this.pantryItemService = pantryItemService;
+        this.deliveryAutoRegisterService = deliveryAutoRegisterService;
     }
 
     @Operation(
@@ -74,6 +78,7 @@ public class PantryItemController {
                     @RequestParam(required = false)
                     String sort,
             @Parameter(description = "검색어. 미입력 시 전체 목록 반환") @RequestParam(required = false) String keyword) {
+        deliveryAutoRegisterService.syncUser(currentUser.userId());
         List<PantryItemResponseDto> response =
                 pantryItemService.getAll(currentUser.userId(), storageType, sort, keyword);
         return ResponseEntity.ok(ApiResponse.success("팬트리 목록 조회가 완료되었습니다.", response));

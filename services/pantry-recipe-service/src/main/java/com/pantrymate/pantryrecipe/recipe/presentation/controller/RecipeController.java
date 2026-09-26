@@ -4,6 +4,7 @@ import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
 import com.pantrymate.common.exception.BusinessException;
 import com.pantrymate.common.exception.CommonErrorCode;
+import com.pantrymate.pantryrecipe.pantry.application.DeliveryAutoRegisterService;
 import com.pantrymate.pantryrecipe.recipe.application.CookingHistoryService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeScrapService;
 import com.pantrymate.pantryrecipe.recipe.application.RecipeService;
@@ -40,14 +41,17 @@ public class RecipeController {
     private final RecipeService recipeService;
     private final RecipeScrapService recipeScrapService;
     private final CookingHistoryService cookingHistoryService;
+    private final DeliveryAutoRegisterService deliveryAutoRegisterService;
 
     public RecipeController(
             RecipeService recipeService,
             RecipeScrapService recipeScrapService,
-            CookingHistoryService cookingHistoryService) {
+            CookingHistoryService cookingHistoryService,
+            DeliveryAutoRegisterService deliveryAutoRegisterService) {
         this.recipeService = recipeService;
         this.recipeScrapService = recipeScrapService;
         this.cookingHistoryService = cookingHistoryService;
+        this.deliveryAutoRegisterService = deliveryAutoRegisterService;
     }
 
     @Operation(
@@ -83,6 +87,7 @@ public class RecipeController {
     @GetMapping("/filter-ingredients")
     public ResponseEntity<ApiResponse<List<RecipeFilterIngredientResponseDto>>> filterIngredients(
             @Parameter(hidden = true) CurrentUser currentUser) {
+        deliveryAutoRegisterService.syncUser(currentUser.userId());
         List<RecipeFilterIngredientResponseDto> response = recipeService.getFilterIngredients(currentUser.userId());
         return ResponseEntity.ok(ApiResponse.success("필터 식재료 후보 조회가 완료되었습니다.", response));
     }
@@ -116,6 +121,7 @@ public class RecipeController {
     @GetMapping("/{recipeId}/pantry-match")
     public ResponseEntity<ApiResponse<RecipePantryMatchResponseDto>> pantryMatch(
             @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
+        deliveryAutoRegisterService.syncUser(currentUser.userId());
         RecipePantryMatchResponseDto response = recipeService.getPantryMatch(currentUser.userId(), recipeId);
         return ResponseEntity.ok(ApiResponse.success("팬트리 매칭 조회가 완료되었습니다.", response));
     }
@@ -136,6 +142,7 @@ public class RecipeController {
     @GetMapping("/{recipeId}/product-match")
     public ResponseEntity<ApiResponse<RecipeProductMatchResponseDto>> productMatch(
             @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
+        deliveryAutoRegisterService.syncUser(currentUser.userId());
         RecipeProductMatchResponseDto response = recipeService.getProductMatch(currentUser.userId(), recipeId);
         return ResponseEntity.ok(ApiResponse.success("상품 매칭 조회가 완료되었습니다.", response));
     }

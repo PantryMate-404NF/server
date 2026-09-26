@@ -117,6 +117,32 @@ public class PantryItem {
         return pantryItem;
     }
 
+    public static PantryItem createAuto(
+            Long userId,
+            Ingredient ingredient,
+            String name,
+            String imageUrl,
+            StorageType storageType,
+            LocalDate purchaseDate,
+            LocalDate sellByDate,
+            LocalDate expiryDate,
+            Long orderItemId) {
+        PantryItem pantryItem = new PantryItem();
+        pantryItem.userId = userId;
+        pantryItem.ingredient = ingredient;
+        pantryItem.name = name;
+        pantryItem.imageUrl = imageUrl;
+        pantryItem.storageType = storageType;
+        pantryItem.purchaseDate = purchaseDate;
+        pantryItem.sellByDate = sellByDate;
+        pantryItem.expiryDate = expiryDate;
+        pantryItem.expiryAutoCalculated = true;
+        pantryItem.cookable = true;
+        pantryItem.registerType = PantryRegisterType.AUTO;
+        pantryItem.orderItemId = orderItemId;
+        return pantryItem;
+    }
+
     public void updateManualFields(
             Ingredient ingredient,
             String name,
