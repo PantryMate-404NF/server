@@ -7,6 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -33,6 +34,16 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(
                                 "/actuator/**", "/api/auth/authorize/**", "/api/auth/login/**", "/api/auth/reissue")
+                        .permitAll()
+                        // 비회원 접근 허용: 상품·레시피 목록/검색/상세 조회(GET만). 스크랩·필터 후보·팬트리 매칭 등은 인증 유지
+                        .pathMatchers(
+                                HttpMethod.GET,
+                                "/api/recipes",
+                                "/api/recipes/search",
+                                "/api/recipes/{recipeId:[0-9]+}",
+                                "/api/products",
+                                "/api/products/{productId:[0-9]+}",
+                                "/api/categories")
                         .permitAll()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtDecoder(jwtDecoder)))

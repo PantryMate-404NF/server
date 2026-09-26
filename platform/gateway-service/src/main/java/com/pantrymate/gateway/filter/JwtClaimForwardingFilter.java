@@ -39,7 +39,10 @@ public class JwtClaimForwardingFilter implements WebFilter {
                 })
                 .switchIfEmpty(Mono.fromSupplier(() -> {
                     log.debug("인증된 JWT를 찾지 못해 X-User-Id를 전달하지 않음: {}", exchange.getRequest().getPath());
-                    return exchange;
+                    ServerHttpRequest sanitizedRequest = exchange.getRequest().mutate()
+                            .headers(headers -> headers.remove(USER_ID_HEADER))
+                            .build();
+                    return exchange.mutate().request(sanitizedRequest).build();
                 }))
                 .flatMap(chain::filter);
     }
