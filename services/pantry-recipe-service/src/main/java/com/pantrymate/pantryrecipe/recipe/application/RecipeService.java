@@ -153,7 +153,10 @@ public class RecipeService {
                     List<MatchedPantryItemResponseDto> matchedDtos =
                             matched.stream().map(MatchedPantryItemResponseDto::from).toList();
                     return new RecipeIngredientPantryMatchResponseDto(
-                            ri.getIngredient().getIngredientId(), ri.getName(), !matchedDtos.isEmpty(), matchedDtos);
+                            ri.getIngredient().getIngredientId(),
+                            ri.getName(),
+                            matched.stream().anyMatch(PantryItem::isCookable),
+                            matchedDtos);
                 })
                 .toList();
 
@@ -173,6 +176,7 @@ public class RecipeService {
 
         Set<Long> ownedIngredientIds =
                 pantryItemRepository.findByUserIdAndIngredient_IngredientIdIn(userId, ingredientIds).stream()
+                        .filter(PantryItem::isCookable)
                         .map(item -> item.getIngredient().getIngredientId())
                         .collect(Collectors.toSet());
         Map<Long, List<ProductCandidate>> candidatesByIngredientId = productCatalog.getOnSaleCandidates().stream()

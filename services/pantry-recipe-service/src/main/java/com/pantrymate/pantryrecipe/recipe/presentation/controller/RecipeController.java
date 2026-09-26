@@ -105,7 +105,8 @@ public class RecipeController {
     @Operation(
             summary = "레시피 필요 재료 팬트리 매칭 조회",
             description = "레시피 필요 재료 각각에 대해 동일 식재료 ID로 매칭되는 로그인 유저의 팬트리 항목(pantryItemId)을 반환한다. "
-                    + "동일 재료가 여러 건 등록돼 있으면 모두 반환하며, 조리완료 시 식재료 정리 대상 조회에도 사용한다.")
+                    + "동일 재료가 여러 건 등록돼 있으면 요리가능 여부와 무관하게 모두 반환하며, 조리완료 시 식재료 정리 대상 조회에도 사용한다. "
+                    + "보유 여부(hasIngredient)는 요리가능 ON인 항목이 있을 때만 true다.")
     @SecurityRequirement(name = "bearerAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -121,7 +122,7 @@ public class RecipeController {
 
     @Operation(
             summary = "레시피 필요 재료 상품 매칭 조회",
-            description = "레시피 필요 재료별로 팬트리 보유 여부와 자사몰 대표 상품을 반환한다. hasIngredient=false인 재료가 부족 재료다. "
+            description = "레시피 필요 재료별로 팬트리 보유 여부(요리가능 ON 기준)와 자사몰 대표 상품을 반환한다. hasIngredient=false인 재료가 부족 재료다. "
                     + "레시피 단위가 g이고 필요량이 있는 재료만 매칭하며, 같은 식재료의 판매중 상품 중 필요 용량 이상이면서 "
                     + "가장 근접한 용량의 상품(동률이면 최저가)을 고른다. 필요 용량을 채우는 상품이 없으면 가장 큰 용량 상품을 "
                     + "capacitySufficient=false로 반환한다. 그 외 단위는 UNSUPPORTED로 반환한다. "
