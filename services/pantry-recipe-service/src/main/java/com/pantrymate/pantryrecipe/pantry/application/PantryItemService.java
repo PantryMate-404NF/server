@@ -43,7 +43,12 @@ public class PantryItemService {
         String name = validateName(request.ingredientName());
         StorageType storageType = validateStorageType(request.storageType());
         Ingredient ingredient = matchIngredient(name);
-        ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate(), ingredient);
+        LocalDate purchaseDate = parsePurchaseDate(request.purchaseDate());
+        ResolvedExpiry resolved = resolveExpiry(
+                request.expiryDate(),
+                request.sellByDate(),
+                ingredient,
+                purchaseDate == null ? LocalDate.now() : purchaseDate);
 
         PantryItem pantryItem = PantryItem.createManual(
                 userId,
@@ -51,6 +56,7 @@ public class PantryItemService {
                 name,
                 request.imageUrl(),
                 storageType,
+                purchaseDate,
                 resolved.sellByDate(),
                 resolved.expiryDate(),
                 resolved.autoCalculated());
@@ -177,7 +183,23 @@ public class PantryItemService {
         }
     }
 
+    private LocalDate parsePurchaseDate(String rawPurchaseDate) {
+        if (rawPurchaseDate == null || rawPurchaseDate.isBlank()) {
+            return null;
+        }
+        LocalDate purchaseDate = parseDate(rawPurchaseDate);
+        if (purchaseDate.isAfter(LocalDate.now())) {
+            throw new BusinessException(PantryErrorCode.PANTRY_INVALID_DATE);
+        }
+        return purchaseDate;
+    }
+
     private ResolvedExpiry resolveExpiry(String rawExpiryDate, String rawSellByDate, Ingredient ingredient) {
+        return resolveExpiry(rawExpiryDate, rawSellByDate, ingredient, LocalDate.now());
+    }
+
+    private ResolvedExpiry resolveExpiry(
+            String rawExpiryDate, String rawSellByDate, Ingredient ingredient, LocalDate baseDate) {
         if (rawExpiryDate != null && !rawExpiryDate.isBlank()) {
             LocalDate expiryDate = parseDate(rawExpiryDate);
             LocalDate sellByDate = rawSellByDate == null || rawSellByDate.isBlank() ? null : parseDate(rawSellByDate);
@@ -190,7 +212,7 @@ public class PantryItemService {
             LocalDate sellByDate = parseDate(rawSellByDate);
             return new ResolvedExpiry(sellByDate, sellByDate.plusDays(extendedConsumptionDays(ingredient)), true);
         }
-        return new ResolvedExpiry(null, LocalDate.now().plusDays(extendedConsumptionDays(ingredient)), true);
+        return new ResolvedExpiry(null, baseDate.plusDays(extendedConsumptionDays(ingredient)), true);
     }
 
     private int extendedConsumptionDays(Ingredient ingredient) {
