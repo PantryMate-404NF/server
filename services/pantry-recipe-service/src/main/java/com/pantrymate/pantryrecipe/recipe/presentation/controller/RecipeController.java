@@ -38,6 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/recipes")
 public class RecipeController {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final RecipeService recipeService;
     private final RecipeScrapService recipeScrapService;
     private final CookingHistoryService cookingHistoryService;
@@ -62,7 +64,7 @@ public class RecipeController {
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "400", description = "RECIPE-INVALID-FILTER / COMMON-001(잘못된 페이지 파라미터)")
+                responseCode = "400", description = "RECIPE-INVALID-FILTER / COMMON-001(page 음수, size 1~100 범위 밖)")
     })
     @GetMapping
     public ResponseEntity<ApiResponse<RecipeListResponseDto>> list(
@@ -157,7 +159,7 @@ public class RecipeController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공(결과 없으면 빈 배열)"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "400",
-                description = "RECIPE-INVALID-SEARCH-KEYWORD / COMMON-001(잘못된 페이지 파라미터)")
+                description = "RECIPE-INVALID-SEARCH-KEYWORD / COMMON-001(page 음수, size 1~100 범위 밖)")
     })
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<RecipeListResponseDto>> search(
@@ -170,7 +172,7 @@ public class RecipeController {
     }
 
     private Pageable toPageable(int page, int size) {
-        if (page < 0 || size <= 0) {
+        if (page < 0 || size <= 0 || size > MAX_PAGE_SIZE) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT);
         }
         return PageRequest.of(page, size);
