@@ -2,6 +2,7 @@ package com.pantrymate.pantryrecipe.pantry.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
+import com.pantrymate.pantryrecipe.pantry.application.DeliveryAutoRegisterService;
 import com.pantrymate.pantryrecipe.pantry.application.PantryItemService;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemCreateRequestDto;
 import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemResponseDto;
@@ -30,14 +31,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class PantryItemController {
 
     private final PantryItemService pantryItemService;
+    private final DeliveryAutoRegisterService deliveryAutoRegisterService;
 
-    public PantryItemController(PantryItemService pantryItemService) {
+    public PantryItemController(
+            PantryItemService pantryItemService, DeliveryAutoRegisterService deliveryAutoRegisterService) {
         this.pantryItemService = pantryItemService;
+        this.deliveryAutoRegisterService = deliveryAutoRegisterService;
     }
 
     @Operation(
             summary = "팬트리 식재료 수기 등록",
-            description = "소비기한 미입력 시 유통기한 기준(임시 +7일)으로, 유통기한도 미입력 시 등록일 기준으로 자동 계산된다.")
+            description = "소비기한 미입력 시 유통기한 기준으로, 유통기한도 미입력 시 등록일 기준으로 식재료 사전의 "
+                    + "소비기한 연장일수를 더해 자동 계산된다. 식재료 사전에 매칭되지 않으면 서버 기본 여유일수를 적용한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "등록 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -53,7 +58,10 @@ public class PantryItemController {
                 .body(ApiResponse.success("팬트리에 식재료가 성공적으로 등록되었습니다.", response));
     }
 
-    @Operation(summary = "팬트리 식재료 목록 조회", description = "로그인한 유저의 팬트리 식재료를 조회한다. 보관방법 필터링과 정렬 기준 선택을 지원한다.")
+    @Operation(
+            summary = "팬트리 식재료 목록 조회",
+            description = "로그인한 유저의 팬트리 식재료를 조회한다. 보관방법 필터링과 정렬 기준 선택을 지원하며, "
+                    + "keyword를 전달하면 적용 중인 필터·정렬 조건 내에서 식재료명 풀텍스트 검색 결과만 반환한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -68,8 +76,11 @@ public class PantryItemController {
                     String storageType,
             @Parameter(description = "정렬 기준 (RECENT: 최근 등록순(기본값) / IMMINENT: 소비기한 임박순 / OLDEST: 오래된 등록순)")
                     @RequestParam(required = false)
-                    String sort) {
-        List<PantryItemResponseDto> response = pantryItemService.getAll(currentUser.userId(), storageType, sort);
+                    String sort,
+            @Parameter(description = "검색어. 미입력 시 전체 목록 반환") @RequestParam(required = false) String keyword) {
+        deliveryAutoRegisterService.syncUser(currentUser.userId());
+        List<PantryItemResponseDto> response =
+                pantryItemService.getAll(currentUser.userId(), storageType, sort, keyword);
         return ResponseEntity.ok(ApiResponse.success("팬트리 목록 조회가 완료되었습니다.", response));
     }
 

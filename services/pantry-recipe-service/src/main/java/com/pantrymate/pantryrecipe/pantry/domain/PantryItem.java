@@ -96,6 +96,7 @@ public class PantryItem {
 
     public static PantryItem createManual(
             Long userId,
+            Ingredient ingredient,
             String name,
             String imageUrl,
             StorageType storageType,
@@ -104,6 +105,7 @@ public class PantryItem {
             boolean expiryAutoCalculated) {
         PantryItem pantryItem = new PantryItem();
         pantryItem.userId = userId;
+        pantryItem.ingredient = ingredient;
         pantryItem.name = name;
         pantryItem.imageUrl = imageUrl;
         pantryItem.storageType = storageType;
@@ -115,13 +117,41 @@ public class PantryItem {
         return pantryItem;
     }
 
+    public static PantryItem createAuto(
+            Long userId,
+            Ingredient ingredient,
+            String name,
+            String imageUrl,
+            StorageType storageType,
+            LocalDate purchaseDate,
+            LocalDate sellByDate,
+            LocalDate expiryDate,
+            Long orderItemId) {
+        PantryItem pantryItem = new PantryItem();
+        pantryItem.userId = userId;
+        pantryItem.ingredient = ingredient;
+        pantryItem.name = name;
+        pantryItem.imageUrl = imageUrl;
+        pantryItem.storageType = storageType;
+        pantryItem.purchaseDate = purchaseDate;
+        pantryItem.sellByDate = sellByDate;
+        pantryItem.expiryDate = expiryDate;
+        pantryItem.expiryAutoCalculated = true;
+        pantryItem.cookable = true;
+        pantryItem.registerType = PantryRegisterType.AUTO;
+        pantryItem.orderItemId = orderItemId;
+        return pantryItem;
+    }
+
     public void updateManualFields(
+            Ingredient ingredient,
             String name,
             String imageUrl,
             StorageType storageType,
             LocalDate sellByDate,
             LocalDate expiryDate,
             boolean expiryAutoCalculated) {
+        this.ingredient = ingredient;
         this.name = name;
         this.imageUrl = imageUrl;
         this.storageType = storageType;

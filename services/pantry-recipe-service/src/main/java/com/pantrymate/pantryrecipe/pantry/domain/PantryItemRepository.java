@@ -1,7 +1,9 @@
 package com.pantrymate.pantryrecipe.pantry.domain;
 
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +11,12 @@ import org.springframework.data.repository.query.Param;
 public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
 
     List<PantryItem> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    List<PantryItem> findByUserIdAndIngredient_IngredientIdIn(Long userId, Collection<Long> ingredientIds);
+
+    List<PantryItem> findByUserIdAndIngredientIsNotNull(Long userId);
+
+    boolean existsByOrderItemId(Long orderItemId);
 
     @Query("SELECT DISTINCT p.userId FROM PantryItem p")
     List<Long> findDistinctUserIds();
@@ -40,4 +48,11 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
             """)
     List<PantryItem> findByUserIdAndStorageTypeOrderByImminent(
             @Param("userId") Long userId, @Param("storageType") StorageType storageType);
+
+    @Query(
+            value =
+                    "SELECT pantry_item_id FROM pantry_items "
+                            + "WHERE user_id = :userId AND to_tsvector('simple', name) @@ plainto_tsquery('simple', :keyword)",
+            nativeQuery = true)
+    Set<Long> findMatchingIdsByUserIdAndKeyword(@Param("userId") Long userId, @Param("keyword") String keyword);
 }

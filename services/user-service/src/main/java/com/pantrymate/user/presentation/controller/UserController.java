@@ -77,8 +77,8 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "저장 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "400",
-                description = "ONBOARD-INVALID-INPUT — familyMemberCount(1~20)/onboardingStep(1 이상) 누락 또는 범위 초과, "
-                        + "preferredFoodTypes 허용값 외 값·중복·5개 초과, allergies 중복·20개 초과, "
+                description = "ONBOARD-INVALID-INPUT — familyMemberCount(1~10)/onboardingStep(1 이상) 누락 또는 범위 초과, "
+                        + "preferredFoodTypes 허용값 외 값·중복·5개 초과, allergies 허용 19종 외 값·중복, "
                         + "favoriteFoods 3개 미만(비어있지 않은 경우)·중복·10개 초과, "
                         + "tastePreferences 값 지정 시 salty/sweet/spicy 중 1~5 범위를 벗어나거나 누락된 항목 존재"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

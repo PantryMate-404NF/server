@@ -19,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserService {
 
-    private static final int MAX_FAMILY_MEMBER_COUNT = 20;
+    private static final int MAX_FAMILY_MEMBER_COUNT = 10;
     private static final int MAX_PREFERRED_FOOD_TYPES = 5;
-    private static final int MAX_ALLERGIES = 20;
+    private static final Set<String> ALLOWED_ALLERGIES = Set.of(
+            "알류(가금류)", "우유", "메밀", "땅콩", "대두", "밀", "고등어", "게", "새우", "돼지고기",
+            "복숭아", "토마토", "아황산류", "호두", "닭고기", "쇠고기", "오징어", "조개류(굴,전복,홍합 포함)", "잣");
     private static final int MIN_FAVORITE_FOODS = 3;
     private static final int MAX_FAVORITE_FOODS = 10;
     private static final int MIN_TASTE_LEVEL = 1;
@@ -100,6 +102,7 @@ public class UserService {
             return;
         }
         if (preferredFoodTypes.size() > MAX_PREFERRED_FOOD_TYPES
+                || preferredFoodTypes.contains(null)
                 || !ALLOWED_PREFERRED_FOOD_TYPES.containsAll(preferredFoodTypes)
                 || new HashSet<>(preferredFoodTypes).size() != preferredFoodTypes.size()) {
             throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
@@ -110,7 +113,9 @@ public class UserService {
         if (allergies == null) {
             return;
         }
-        if (allergies.size() > MAX_ALLERGIES || new HashSet<>(allergies).size() != allergies.size()) {
+        if (allergies.contains(null)
+                || !ALLOWED_ALLERGIES.containsAll(allergies)
+                || new HashSet<>(allergies).size() != allergies.size()) {
             throw new BusinessException(UserErrorCode.ONBOARD_INVALID_INPUT);
         }
     }

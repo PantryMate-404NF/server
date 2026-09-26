@@ -1,6 +1,8 @@
 package com.pantrymate.pantryrecipe.pantry.application;
 
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.pantryrecipe.ingredient.domain.Ingredient;
+import com.pantrymate.pantryrecipe.ingredient.domain.IngredientRepository;
 import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItemRepository;
@@ -13,6 +15,7 @@ import com.pantrymate.pantryrecipe.pantry.presentation.dto.PantryItemUpdateReque
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,26 +26,28 @@ public class PantryItemService {
     private static final int MAX_NAME_LENGTH = 20;
 
     private final PantryItemRepository pantryItemRepository;
-    private final int defaultFallbackExtensionDays;
-    private final int tempSellByToExpiryDays;
+    private final IngredientRepository ingredientRepository;
+    private final int fallbackExtraDays;
 
     public PantryItemService(
             PantryItemRepository pantryItemRepository,
-            @Value("${pantry.expiry.default-fallback-extension-days}") int defaultFallbackExtensionDays,
-            @Value("${pantry.expiry.temp-sell-by-to-expiry-days}") int tempSellByToExpiryDays) {
+            IngredientRepository ingredientRepository,
+            @Value("${pantry.expiry.fallback-extra-days}") int fallbackExtraDays) {
         this.pantryItemRepository = pantryItemRepository;
-        this.defaultFallbackExtensionDays = defaultFallbackExtensionDays;
-        this.tempSellByToExpiryDays = tempSellByToExpiryDays;
+        this.ingredientRepository = ingredientRepository;
+        this.fallbackExtraDays = fallbackExtraDays;
     }
 
     @Transactional
     public PantryItemResponseDto save(Long userId, PantryItemCreateRequestDto request) {
         String name = validateName(request.ingredientName());
         StorageType storageType = validateStorageType(request.storageType());
-        ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate());
+        Ingredient ingredient = matchIngredient(name);
+        ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate(), ingredient);
 
         PantryItem pantryItem = PantryItem.createManual(
                 userId,
+                ingredient,
                 name,
                 request.imageUrl(),
                 storageType,
@@ -54,7 +59,8 @@ public class PantryItemService {
     }
 
     @Transactional(readOnly = true)
-    public List<PantryItemResponseDto> getAll(Long userId, String rawStorageType, String rawSort) {
+    public List<PantryItemResponseDto> getAll(
+            Long userId, String rawStorageType, String rawSort, String rawKeyword) {
         StorageType storageType = rawStorageType == null || rawStorageType.isBlank() ? null : validateStorageType(rawStorageType);
         PantrySortType sort = validateSort(rawSort);
 
@@ -70,6 +76,15 @@ public class PantryItemService {
                             ? pantryItemRepository.findByUserIdOrderByImminent(userId)
                             : pantryItemRepository.findByUserIdAndStorageTypeOrderByImminent(userId, storageType);
                 };
+
+        String keyword = rawKeyword == null ? "" : rawKeyword.trim();
+        if (!keyword.isEmpty()) {
+            Set<Long> matchingIds = pantryItemRepository.findMatchingIdsByUserIdAndKeyword(userId, keyword);
+            items = items.stream()
+                    .filter(item -> matchingIds.contains(item.getPantryItemId()))
+                    .toList();
+        }
+
         return items.stream().map(PantryItemResponseDto::from).toList();
     }
 
@@ -77,12 +92,13 @@ public class PantryItemService {
     public PantryItemResponseDto update(Long userId, Long pantryItemId, PantryItemUpdateRequestDto request) {
         PantryItem pantryItem = getByIdAndUserId(pantryItemId, userId);
 
-        ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate());
-
         if (pantryItem.getRegisterType() == PantryRegisterType.MANUAL) {
             String name = validateName(request.ingredientName());
             StorageType storageType = validateStorageType(request.storageType());
+            Ingredient ingredient = matchIngredient(name);
+            ResolvedExpiry resolved = resolveExpiry(request.expiryDate(), request.sellByDate(), ingredient);
             pantryItem.updateManualFields(
+                    ingredient,
                     name,
                     request.imageUrl(),
                     storageType,
@@ -91,6 +107,8 @@ public class PantryItemService {
                     resolved.autoCalculated());
         } else {
             // 자사몰 연동(자동 등록) 식재료는 식재료명·보관방법·이미지가 SKU에 연결되어 있어 수정 대상에서 제외한다.
+            ResolvedExpiry resolved =
+                    resolveExpiry(request.expiryDate(), request.sellByDate(), pantryItem.getIngredient());
             pantryItem.updateExpiryDate(resolved.sellByDate(), resolved.expiryDate(), resolved.autoCalculated());
         }
 
@@ -159,7 +177,7 @@ public class PantryItemService {
         }
     }
 
-    private ResolvedExpiry resolveExpiry(String rawExpiryDate, String rawSellByDate) {
+    private ResolvedExpiry resolveExpiry(String rawExpiryDate, String rawSellByDate, Ingredient ingredient) {
         if (rawExpiryDate != null && !rawExpiryDate.isBlank()) {
             LocalDate expiryDate = parseDate(rawExpiryDate);
             LocalDate sellByDate = rawSellByDate == null || rawSellByDate.isBlank() ? null : parseDate(rawSellByDate);
@@ -170,10 +188,20 @@ public class PantryItemService {
         }
         if (rawSellByDate != null && !rawSellByDate.isBlank()) {
             LocalDate sellByDate = parseDate(rawSellByDate);
-            // TODO: Ingredient.extendedConsumptionDays로 식재료별 소비기한 연장일을 조회해 반영. 매칭 전까지는 임시로 고정일수만 더한다.
-            return new ResolvedExpiry(sellByDate, sellByDate.plusDays(tempSellByToExpiryDays), true);
+            return new ResolvedExpiry(sellByDate, sellByDate.plusDays(extendedConsumptionDays(ingredient)), true);
         }
-        return new ResolvedExpiry(null, LocalDate.now().plusDays(defaultFallbackExtensionDays), true);
+        return new ResolvedExpiry(null, LocalDate.now().plusDays(extendedConsumptionDays(ingredient)), true);
+    }
+
+    private int extendedConsumptionDays(Ingredient ingredient) {
+        if (ingredient == null || ingredient.getExtendedConsumptionDays() == null) {
+            return fallbackExtraDays;
+        }
+        return ingredient.getExtendedConsumptionDays();
+    }
+
+    private Ingredient matchIngredient(String name) {
+        return ingredientRepository.findByNameIgnoreCase(name).orElse(null);
     }
 
     private LocalDate parseDate(String rawDate) {
