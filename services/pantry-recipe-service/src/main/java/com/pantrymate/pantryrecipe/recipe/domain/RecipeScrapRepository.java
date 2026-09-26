@@ -21,7 +21,7 @@ public interface RecipeScrapRepository extends JpaRepository<RecipeScrap, Long> 
                             + "VALUES (:userId, :recipeId, CURRENT_TIMESTAMP) "
                             + "ON CONFLICT (user_id, recipe_id) DO NOTHING",
             nativeQuery = true)
-    void insertIfAbsent(@Param("userId") Long userId, @Param("recipeId") Long recipeId);
+    int insertIfAbsent(@Param("userId") Long userId, @Param("recipeId") Long recipeId);
 
     @Query(
             "SELECT new com.pantrymate.pantryrecipe.recipe.domain.RecipeScrapCount(s.recipe.recipeId, COUNT(s)) "

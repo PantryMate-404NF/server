@@ -17,7 +17,9 @@ public enum UserErrorCode implements ErrorCode {
     USER_INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "USER-INVALID-NICKNAME", "닉네임은 2자 이상 20자 이하로 입력해 주세요."),
 
     ONBOARD_INVALID_INPUT(HttpStatus.BAD_REQUEST, "ONBOARD-INVALID-INPUT", "가족 구성원 수는 1명 이상이어야 합니다."),
-    ONBOARD_NOTFOUND_PREFERENCE(HttpStatus.NOT_FOUND, "ONBOARD-NOTFOUND-PREFERENCE", "온보딩 설정 정보를 찾을 수 없습니다.");
+    ONBOARD_NOTFOUND_PREFERENCE(HttpStatus.NOT_FOUND, "ONBOARD-NOTFOUND-PREFERENCE", "온보딩 설정 정보를 찾을 수 없습니다."),
+    ONBOARD_UNAVAILABLE_FOODS(
+            HttpStatus.SERVICE_UNAVAILABLE, "ONBOARD-UNAVAILABLE-FOODS", "음식 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
 
     private final HttpStatus status;
     private final String code;
