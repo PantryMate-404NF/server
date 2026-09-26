@@ -37,7 +37,8 @@ public class PantryItemController {
 
     @Operation(
             summary = "팬트리 식재료 수기 등록",
-            description = "소비기한 미입력 시 유통기한 기준(임시 +7일)으로, 유통기한도 미입력 시 등록일 기준으로 자동 계산된다.")
+            description = "소비기한 미입력 시 유통기한 기준으로, 유통기한도 미입력 시 등록일 기준으로 식재료 사전의 "
+                    + "소비기한 연장일수를 더해 자동 계산된다. 식재료 사전에 매칭되지 않으면 서버 기본 여유일수를 적용한다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "등록 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
