@@ -48,6 +48,13 @@ ai:
     internal-api-key: ${AI_INTERNAL_API_KEY}
     # AI 서버는 추천을 3초 안에 답하므로 여유를 조금 둔다
     timeout-ms: ${AI_RECOMMEND_TIMEOUT_MS:3500}
+  events:
+    # 저장·조리·클릭 이벤트를 모아 AI 서버 /v1/events로 보낸다(최대 200건씩)
+    enabled: ${AI_EVENTS_ENABLED:true}
+    base-url: ${AI_EVENTS_BASE_URL:http://ai-serving-svc:8000}
+    internal-api-key: ${AI_INTERNAL_API_KEY}
+    timeout-ms: ${AI_EVENTS_TIMEOUT_MS:5000}
+    interval-ms: ${AI_EVENTS_INTERVAL_MS:10000}
 
 product-service:
   url: ${PRODUCT_SERVICE_URL:http://product-service.default.svc.cluster.local:8083}

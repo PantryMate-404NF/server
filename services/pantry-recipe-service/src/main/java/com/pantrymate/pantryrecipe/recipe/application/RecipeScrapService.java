@@ -1,6 +1,7 @@
 package com.pantrymate.pantryrecipe.recipe.application;
 
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.pantryrecipe.ai.application.AiEventRecorder;
 import com.pantrymate.pantryrecipe.recipe.domain.Recipe;
 import com.pantrymate.pantryrecipe.recipe.domain.RecipeRepository;
 import com.pantrymate.pantryrecipe.recipe.domain.RecipeScrap;
@@ -16,23 +17,33 @@ public class RecipeScrapService {
 
     private final RecipeRepository recipeRepository;
     private final RecipeScrapRepository recipeScrapRepository;
+    private final AiEventRecorder aiEventRecorder;
 
-    public RecipeScrapService(RecipeRepository recipeRepository, RecipeScrapRepository recipeScrapRepository) {
+    public RecipeScrapService(
+            RecipeRepository recipeRepository,
+            RecipeScrapRepository recipeScrapRepository,
+            AiEventRecorder aiEventRecorder) {
         this.recipeRepository = recipeRepository;
         this.recipeScrapRepository = recipeScrapRepository;
+        this.aiEventRecorder = aiEventRecorder;
     }
 
     @Transactional
-    public void scrap(Long userId, Long recipeId) {
+    public void scrap(Long userId, Long recipeId, String requestId, Integer position) {
         Recipe recipe = recipeRepository
                 .findByRecipeIdAndPublishedTrue(recipeId)
                 .orElseThrow(() -> new BusinessException(RecipeErrorCode.RECIPE_NOTFOUND_ID));
-        recipeScrapRepository.insertIfAbsent(userId, recipe.getRecipeId());
+        if (recipeScrapRepository.insertIfAbsent(userId, recipe.getRecipeId()) > 0) {
+            aiEventRecorder.record(userId, AiEventRecorder.SAVE, recipeId, requestId, position);
+        }
     }
 
     @Transactional
-    public void unscrap(Long userId, Long recipeId) {
-        recipeScrapRepository.findByUserIdAndRecipe_RecipeId(userId, recipeId).ifPresent(recipeScrapRepository::delete);
+    public void unscrap(Long userId, Long recipeId, String requestId, Integer position) {
+        recipeScrapRepository.findByUserIdAndRecipe_RecipeId(userId, recipeId).ifPresent(scrap -> {
+            recipeScrapRepository.delete(scrap);
+            aiEventRecorder.record(userId, AiEventRecorder.UNSAVE, recipeId, requestId, position);
+        });
     }
 
     @Transactional(readOnly = true)

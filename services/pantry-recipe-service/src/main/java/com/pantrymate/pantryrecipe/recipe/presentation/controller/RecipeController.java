@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -137,8 +138,12 @@ public class RecipeController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RECIPE-NOTFOUND-ID")
     })
     @GetMapping("/{recipeId}")
-    public ResponseEntity<ApiResponse<RecipeDetailResponseDto>> detail(@PathVariable Long recipeId) {
-        RecipeDetailResponseDto response = recipeService.getById(recipeId);
+    public ResponseEntity<ApiResponse<RecipeDetailResponseDto>> detail(
+            @PathVariable Long recipeId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @Parameter(description = "추천 목록에서 들어온 경우 추천 응답의 requestId(AI 학습용)") @RequestParam(required = false) String requestId,
+            @Parameter(description = "추천 목록에서의 순위(1부터)") @RequestParam(required = false) Integer position) {
+        RecipeDetailResponseDto response = recipeService.getById(recipeId, userId, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("레시피 상세 조회가 완료되었습니다.", response));
     }
 
@@ -233,8 +238,11 @@ public class RecipeController {
     })
     @PostMapping("/{recipeId}/scrap")
     public ResponseEntity<ApiResponse<Void>> scrap(
-            @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
-        recipeScrapService.scrap(currentUser.userId(), recipeId);
+            @Parameter(hidden = true) CurrentUser currentUser,
+            @PathVariable Long recipeId,
+            @Parameter(description = "추천 목록에서 들어온 경우 추천 응답의 requestId(AI 학습용)") @RequestParam(required = false) String requestId,
+            @Parameter(description = "추천 목록에서의 순위(1부터)") @RequestParam(required = false) Integer position) {
+        recipeScrapService.scrap(currentUser.userId(), recipeId, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("레시피를 스크랩했습니다.", null));
     }
 
@@ -246,8 +254,11 @@ public class RecipeController {
     })
     @DeleteMapping("/{recipeId}/scrap")
     public ResponseEntity<ApiResponse<Void>> unscrap(
-            @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
-        recipeScrapService.unscrap(currentUser.userId(), recipeId);
+            @Parameter(hidden = true) CurrentUser currentUser,
+            @PathVariable Long recipeId,
+            @Parameter(description = "추천 목록에서 들어온 경우 추천 응답의 requestId(AI 학습용)") @RequestParam(required = false) String requestId,
+            @Parameter(description = "추천 목록에서의 순위(1부터)") @RequestParam(required = false) Integer position) {
+        recipeScrapService.unscrap(currentUser.userId(), recipeId, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("레시피 스크랩을 해제했습니다.", null));
     }
 
@@ -269,8 +280,10 @@ public class RecipeController {
             @PathVariable Long recipeId,
             @RequestBody(required = false) CookingCompleteRequestDto request) {
         List<Long> pantryItemIds = request == null ? null : request.pantryItemIds();
+        String requestId = request == null ? null : request.requestId();
+        Integer position = request == null ? null : request.position();
         CookingHistoryResponseDto response =
-                cookingHistoryService.complete(currentUser.userId(), recipeId, pantryItemIds);
+                cookingHistoryService.complete(currentUser.userId(), recipeId, pantryItemIds, requestId, position);
         return ResponseEntity.ok(ApiResponse.success("조리 완료가 기록되었습니다.", response));
     }
 }
