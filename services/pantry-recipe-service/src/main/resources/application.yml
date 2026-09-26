@@ -18,6 +18,17 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  cloud:
+    openfeign:
+      client:
+        config:
+          # 서비스 간 조회가 느려져도 사용자 요청이 오래 붙잡히지 않도록 짧게 제한(ms)
+          order-payment-service:
+            connect-timeout: 500
+            read-timeout: 1500
+          product-service:
+            connect-timeout: 500
+            read-timeout: 3000
 
 ai:
   ocr:
@@ -31,11 +42,20 @@ ai:
 product-service:
   url: ${PRODUCT_SERVICE_URL:http://product-service.default.svc.cluster.local:8083}
 
+order-payment-service:
+  url: ${ORDER_PAYMENT_SERVICE_URL:http://order-payment-service.default.svc.cluster.local:8084}
+
 product:
   catalog:
     cache-ttl-seconds: 60
 
 pantry:
+  # 팬트리 자동 등록(PANTRY-001). 배송 도메인 도입 전까지 결제 완료 후 delivery-delay-minutes가 지난 주문을 배송 완료로 간주한다.
+  auto-register:
+    enabled: true
+    delivery-delay-minutes: 30
+    lookback-days: 7
+    min-sync-interval-seconds: 60
   expiry:
     # 식재료 사전 매칭 실패(또는 extended_consumption_days 없음) 시 쓰는 기본 여유일수(유통기한 또는 등록일에 더함)
     fallback-extra-days: 3

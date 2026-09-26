@@ -107,7 +107,8 @@ public class FeignProductCatalog implements ProductCatalog {
             ApiResponse<ProductListPayload> response = client.getProducts(page, PAGE_SIZE);
             ProductListPayload payload = response == null ? null : response.data();
             if (payload == null) {
-                break;
+                // 일부 페이지만 받은 결과가 정상 스냅샷으로 저장되지 않도록 실패로 처리해 마지막 성공 결과를 유지한다.
+                throw new IllegalStateException("상품 목록 응답이 비어 있음(page=" + page + ")");
             }
             totalPages = payload.totalPages();
             ids.addAll(payload.content().stream()
