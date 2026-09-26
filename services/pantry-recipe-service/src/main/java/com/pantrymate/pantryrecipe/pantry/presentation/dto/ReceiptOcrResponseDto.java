@@ -15,10 +15,12 @@ public record ReceiptOcrResponseDto(
         @Schema(description = "식재료로 판정된 구매 품목. 0개일 수 있음") List<Item> items,
         @JsonInclude(JsonInclude.Include.NON_NULL) @Schema(description = "실패 시에만 존재") Error error) {
 
+    @Schema(name = "ReceiptOcrItem")
     public record Item(
             @Schema(description = "영수증 표기 기준 품목명(최대 20자)", example = "깐마늘") String name,
             @JsonProperty("ingredient_id") @Schema(description = "식재료 사전 ID. 미매칭이면 null", nullable = true) Long ingredientId) {}
 
+    @Schema(name = "ReceiptOcrError")
     public record Error(
             @Schema(description = "OCR_EMPTY / LLM_UNAVAILABLE", example = "OCR_EMPTY") String code,
             @Schema(description = "사용자에게 그대로 보여줄 수 있는 한국어 메시지") String message) {}

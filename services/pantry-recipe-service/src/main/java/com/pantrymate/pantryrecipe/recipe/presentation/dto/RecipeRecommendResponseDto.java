@@ -12,6 +12,7 @@ public record RecipeRecommendResponseDto(
                 String source,
         @Schema(description = "화면에 보이는 순서대로 정렬되어 있다. 순서를 바꾸지 말 것") List<Item> items) {
 
+    @Schema(name = "RecipeRecommendItem")
     public record Item(
             @Schema(description = "노출 순위(1부터)", example = "1") int rank,
             @Schema(description = "추천 이유 한 문장(AI 제공). 폴백이면 null", nullable = true) String reason,

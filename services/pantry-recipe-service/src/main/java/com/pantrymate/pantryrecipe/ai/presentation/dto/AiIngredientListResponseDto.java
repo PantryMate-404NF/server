@@ -3,10 +3,12 @@ package com.pantrymate.pantryrecipe.ai.presentation.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pantrymate.pantryrecipe.ingredient.domain.Ingredient;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 public record AiIngredientListResponseDto(List<Item> items) {
 
+    @Schema(name = "AiIngredientItem")
     public record Item(
             @JsonProperty("ingredient_id") Long ingredientId,
             String name,

@@ -1,12 +1,14 @@
 package com.pantrymate.pantryrecipe.ai.presentation.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
 
 public record AiRecipeListResponseDto(
         List<Item> items, @JsonProperty("next_cursor") String nextCursor, long total) {
 
+    @Schema(name = "AiRecipeItem")
     public record Item(
             @JsonProperty("recipe_id") Long recipeId,
             String title,
