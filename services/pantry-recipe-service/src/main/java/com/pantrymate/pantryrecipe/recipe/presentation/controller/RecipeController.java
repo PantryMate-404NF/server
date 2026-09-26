@@ -13,6 +13,7 @@ import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeDetailResponseD
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeFilterIngredientResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeListResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipePantryMatchResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeProductMatchResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -116,6 +117,26 @@ public class RecipeController {
             @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
         RecipePantryMatchResponseDto response = recipeService.getPantryMatch(currentUser.userId(), recipeId);
         return ResponseEntity.ok(ApiResponse.success("팬트리 매칭 조회가 완료되었습니다.", response));
+    }
+
+    @Operation(
+            summary = "레시피 필요 재료 상품 매칭 조회",
+            description = "레시피 필요 재료별로 팬트리 보유 여부와 자사몰 대표 상품을 반환한다. hasIngredient=false인 재료가 부족 재료다. "
+                    + "레시피 단위가 g이고 필요량이 있는 재료만 매칭하며, 같은 식재료의 판매중 상품 중 필요 용량 이상이면서 "
+                    + "가장 근접한 용량의 상품(동률이면 최저가)을 고른다. 필요 용량을 채우는 상품이 없으면 가장 큰 용량 상품을 "
+                    + "capacitySufficient=false로 반환한다. 그 외 단위는 UNSUPPORTED로 반환한다. "
+                    + "장바구니에는 매칭된 상품을 수량 1개로 POST /api/cart/items에 담는다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUTH-UNAUTHORIZED"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RECIPE-NOTFOUND-ID")
+    })
+    @GetMapping("/{recipeId}/product-match")
+    public ResponseEntity<ApiResponse<RecipeProductMatchResponseDto>> productMatch(
+            @Parameter(hidden = true) CurrentUser currentUser, @PathVariable Long recipeId) {
+        RecipeProductMatchResponseDto response = recipeService.getProductMatch(currentUser.userId(), recipeId);
+        return ResponseEntity.ok(ApiResponse.success("상품 매칭 조회가 완료되었습니다.", response));
     }
 
     @Operation(

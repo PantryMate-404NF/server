@@ -28,6 +28,13 @@ ai:
     base-url: ${AI_RECOMMEND_BASE_URL:http://ai-serving-svc:8000}
     timeout-ms: ${AI_RECOMMEND_TIMEOUT_MS:1000}
 
+product-service:
+  url: ${PRODUCT_SERVICE_URL:http://product-service.default.svc.cluster.local:8083}
+
+product:
+  catalog:
+    cache-ttl-seconds: 60
+
 pantry:
   expiry:
     # 식재료 사전 매칭 실패(또는 extended_consumption_days 없음) 시 쓰는 기본 여유일수(유통기한 또는 등록일에 더함)

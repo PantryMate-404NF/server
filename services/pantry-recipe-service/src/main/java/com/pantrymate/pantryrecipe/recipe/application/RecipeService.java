@@ -3,8 +3,11 @@ package com.pantrymate.pantryrecipe.recipe.application;
 import com.pantrymate.common.exception.BusinessException;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItem;
 import com.pantrymate.pantryrecipe.pantry.domain.PantryItemRepository;
+import com.pantrymate.pantryrecipe.recipe.domain.ProductCandidate;
+import com.pantrymate.pantryrecipe.recipe.domain.ProductCatalog;
 import com.pantrymate.pantryrecipe.recipe.domain.Recipe;
 import com.pantrymate.pantryrecipe.recipe.domain.RecipeIngredient;
+import com.pantrymate.pantryrecipe.recipe.domain.RecipeProductMatcher;
 import com.pantrymate.pantryrecipe.recipe.domain.RecipeIngredientRepository;
 import com.pantrymate.pantryrecipe.recipe.domain.RecipeRepository;
 import com.pantrymate.pantryrecipe.recipe.domain.RecipeStepRepository;
@@ -16,6 +19,9 @@ import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeIngredientPantr
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeIngredientResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeListResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipePantryMatchResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeProductMatchResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeProductMatchResponseDto.IngredientProductMatchResponseDto;
+import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeProductMatchResponseDto.MatchedProductResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeResponseDto;
 import com.pantrymate.pantryrecipe.recipe.presentation.dto.RecipeStepResponseDto;
 import java.time.LocalDate;
@@ -24,6 +30,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -38,16 +45,19 @@ public class RecipeService {
     private final RecipeStepRepository recipeStepRepository;
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final PantryItemRepository pantryItemRepository;
+    private final ProductCatalog productCatalog;
 
     public RecipeService(
             RecipeRepository recipeRepository,
             RecipeStepRepository recipeStepRepository,
             RecipeIngredientRepository recipeIngredientRepository,
-            PantryItemRepository pantryItemRepository) {
+            PantryItemRepository pantryItemRepository,
+            ProductCatalog productCatalog) {
         this.recipeRepository = recipeRepository;
         this.recipeStepRepository = recipeStepRepository;
         this.recipeIngredientRepository = recipeIngredientRepository;
         this.pantryItemRepository = pantryItemRepository;
+        this.productCatalog = productCatalog;
     }
 
     private static final int MAX_FILTER_INGREDIENTS = 3;
@@ -148,6 +158,46 @@ public class RecipeService {
                 .toList();
 
         return new RecipePantryMatchResponseDto(recipeId, ingredients);
+    }
+
+    @Transactional(readOnly = true)
+    public RecipeProductMatchResponseDto getProductMatch(Long userId, Long recipeId) {
+        recipeRepository
+                .findByRecipeIdAndPublishedTrue(recipeId)
+                .orElseThrow(() -> new BusinessException(RecipeErrorCode.RECIPE_NOTFOUND_ID));
+
+        List<RecipeIngredient> recipeIngredients =
+                recipeIngredientRepository.findByRecipe_RecipeIdOrderByRecipeIngredientIdAsc(recipeId);
+        List<Long> ingredientIds =
+                recipeIngredients.stream().map(ri -> ri.getIngredient().getIngredientId()).toList();
+
+        Set<Long> ownedIngredientIds =
+                pantryItemRepository.findByUserIdAndIngredient_IngredientIdIn(userId, ingredientIds).stream()
+                        .map(item -> item.getIngredient().getIngredientId())
+                        .collect(Collectors.toSet());
+        Map<Long, List<ProductCandidate>> candidatesByIngredientId = productCatalog.getOnSaleCandidates().stream()
+                .collect(Collectors.groupingBy(ProductCandidate::ingredientId));
+
+        List<IngredientProductMatchResponseDto> ingredients = recipeIngredients.stream()
+                .map(ri -> {
+                    Long ingredientId = ri.getIngredient().getIngredientId();
+                    RecipeProductMatcher.Result result = RecipeProductMatcher.match(
+                            ri.getRequiredAmount(),
+                            ri.getUnit(),
+                            candidatesByIngredientId.getOrDefault(ingredientId, List.of()));
+                    MatchedProductResponseDto product = result.product() == null
+                            ? null
+                            : MatchedProductResponseDto.of(result.product(), result.capacitySufficient());
+                    return new IngredientProductMatchResponseDto(
+                            ingredientId,
+                            ri.getName(),
+                            ownedIngredientIds.contains(ingredientId),
+                            result.status(),
+                            product);
+                })
+                .toList();
+
+        return new RecipeProductMatchResponseDto(recipeId, ingredients);
     }
 
     @Transactional(readOnly = true)
