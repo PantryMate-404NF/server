@@ -243,6 +243,9 @@ public class Products {
         if (thumbnailUrl != null) {
             this.thumbnailUrl = thumbnailUrl;
         }
+        if (ingredientId != null) {
+            this.ingredientId = ingredientId;
+        }
 
     }
 }

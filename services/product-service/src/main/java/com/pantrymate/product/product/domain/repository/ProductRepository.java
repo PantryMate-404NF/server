@@ -32,4 +32,8 @@ public interface ProductRepository {
     Page<Products> findByNameContainingAndDeletedAtIsNullAndStatusIn(String name,
         List<ProductStatus> statuses, Pageable pageable);
 
+    Page<Products> findByDeletedAtIsNullAndStatusIn(List<ProductStatus> status, Pageable pageable);
+    Page<Products> findByCategoryIdAndDeletedAtIsNullAndStatusIn(Long categoryId,
+        List<ProductStatus> status, Pageable pageable);
+
 }

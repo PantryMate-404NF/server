@@ -18,7 +18,8 @@ public record ProductDetailResponse(
     String thumbnailUrl,
     List<ProductImageResponse> images,
     Integer stockQuantity,
-    String status
+    String status,
+    Long ingredientId
 ) {
 
     public static ProductDetailResponse of(Products products, String categoryName,
@@ -38,7 +39,8 @@ public record ProductDetailResponse(
             products.getThumbnailUrl(),
             images,
             products.getStockQuantity(),
-            products.getStatus().name()
+            products.getStatus().name(),
+            products.getIngredientId()
         );
     }
 }
