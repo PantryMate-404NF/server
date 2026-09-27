@@ -68,15 +68,17 @@ public class ProductController {
     @GetMapping
     public ApiResponse<ProductListResponse> getProductList(
         @RequestParam(required = false) Long categoryId,
+        @RequestParam(defaultValue = "false") boolean purchasableOnly,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "60") int size) {
+        @RequestParam(defaultValue = "60") int size)
+        {
 
         if (page < 0 || size <= 0) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT);
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        ProductListResponse response = productService.getProductList(categoryId, pageable);
+        ProductListResponse response = productService.getProductList(categoryId, purchasableOnly, pageable);
         return ApiResponse.success("상품 목록을 정상 조회하였습니다.", response);
     }
 

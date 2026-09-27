@@ -5,6 +5,7 @@ import com.pantrymate.orderpayment.cart.domain.CartItems;
 import com.pantrymate.orderpayment.cart.domain.Carts;
 import com.pantrymate.orderpayment.cart.domain.repository.CartItemRepository;
 import com.pantrymate.orderpayment.cart.domain.repository.CartRepository;
+import com.pantrymate.orderpayment.order.application.dto.DeliveryAddressRequest;
 import com.pantrymate.orderpayment.order.application.dto.DirectOrderRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
@@ -74,9 +75,11 @@ public class OrderService {
             .mapToLong(v -> v.product().price() * v.items().getQuantity())
             .sum();
         String orderName = createOrderName(validateItems);
+        DeliveryAddressRequest addr = request.deliveryAddress();
         try {
             Orders order = orderRepository.save(
-                Orders.create(userId, orderName, totalAmount, idempotencyKey));
+                Orders.create(userId, orderName, totalAmount, idempotencyKey, addr.recipientName(),
+                    addr.recipientPhone(), addr.zipCode(), addr.address(), addr.addressDetail()));
 
             List<OrderItems> orderItems = validateItems.stream()
                 .map(v -> OrderItems.create(
@@ -128,10 +131,12 @@ public class OrderService {
 
         Long totalAmount = infoResponse.price() * request.quantity();
         String orderName = infoResponse.name();
+        DeliveryAddressRequest addr = request.deliveryAddress();
 
         try {
             Orders order = orderRepository.save(
-                Orders.create(userId, orderName, totalAmount, idempotencyKey));
+                Orders.create(userId, orderName, totalAmount, idempotencyKey, addr.recipientName(),
+                    addr.recipientPhone(), addr.zipCode(), addr.address(), addr.addressDetail()));
             OrderItems orderItem = OrderItems.create(order.getId(), infoResponse.productId(),
                 orderName, infoResponse.price(), request.quantity());
             orderItemRepository.save(orderItem);

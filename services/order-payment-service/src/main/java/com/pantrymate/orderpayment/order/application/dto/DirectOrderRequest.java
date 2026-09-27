@@ -1,5 +1,6 @@
 package com.pantrymate.orderpayment.order.application.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -9,7 +10,11 @@ public record DirectOrderRequest(
 
     @NotNull
     @Positive
-    Integer quantity
+    Integer quantity,
+
+    @NotNull
+    @Valid
+    DeliveryAddressRequest deliveryAddress
 ) {
 
 }
