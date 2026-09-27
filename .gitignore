@@ -48,3 +48,7 @@ CLAUDE.md
 ### Local run scripts output ###
 /logs/
 /scripts/
+
+### Firebase service account keys (never commit) ###
+firebase-service-account*.json
+*-service-account*.json

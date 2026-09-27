@@ -10,7 +10,7 @@ public record UserPreferenceUpdateRequestDto(
                         description = "가족 구성원 수",
                         example = "3",
                         minimum = "1",
-                        maximum = "20",
+                        maximum = "10",
                         requiredMode = Schema.RequiredMode.REQUIRED)
                 Integer familyMemberCount,
         @ArraySchema(
@@ -24,9 +24,14 @@ public record UserPreferenceUpdateRequestDto(
         @ArraySchema(
                         schema =
                                 @Schema(
-                                        description = "알레르기 유발 식재료명 (자유 텍스트). 생략/null/빈 배열은 모두 '값 없음'으로 저장됨",
-                                        example = "갑각류"),
-                        maxItems = 20,
+                                        description = "알레르기 유발 식품(정해진 19종 중 선택). 생략/null/빈 배열은 모두 '값 없음'으로 저장됨",
+                                        example = "새우",
+                                        allowableValues = {
+                                            "알류(가금류)", "우유", "메밀", "땅콩", "대두", "밀", "고등어", "게", "새우", "돼지고기",
+                                            "복숭아", "토마토", "아황산류", "호두", "닭고기", "쇠고기", "오징어",
+                                            "조개류(굴,전복,홍합 포함)", "잣"
+                                        }),
+                        maxItems = 19,
                         uniqueItems = true)
                 List<String> allergies,
         @ArraySchema(

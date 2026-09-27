@@ -9,7 +9,11 @@ public enum PantryErrorCode implements ErrorCode {
     PANTRY_INVALID_STORAGE(
             HttpStatus.BAD_REQUEST, "PANTRY-INVALID-STORAGE", "올바른 보관방법(REFRIGERATED, FROZEN, ROOM_TEMP)을 선택해주세요."),
     PANTRY_NOTFOUND_ITEM(HttpStatus.NOT_FOUND, "PANTRY-NOTFOUND-ITEM", "해당 팬트리 식재료를 찾을 수 없습니다."),
-    PANTRY_INVALID_SORT(HttpStatus.BAD_REQUEST, "PANTRY-INVALID-SORT", "올바른 정렬 기준(RECENT, IMMINENT, OLDEST)을 선택해주세요.");
+    PANTRY_INVALID_SORT(HttpStatus.BAD_REQUEST, "PANTRY-INVALID-SORT", "올바른 정렬 기준(RECENT, IMMINENT, OLDEST)을 선택해주세요."),
+    PANTRY_INVALID_RECEIPT(
+            HttpStatus.BAD_REQUEST,
+            "PANTRY-INVALID-RECEIPT",
+            "영수증 이미지는 JPEG·PNG·WebP·HEIC 형식의 10MB 이하 파일 1장과 영수증 ID가 필요합니다.");
 
     private final HttpStatus status;
     private final String code;

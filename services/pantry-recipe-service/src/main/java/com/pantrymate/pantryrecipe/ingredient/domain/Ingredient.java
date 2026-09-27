@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,6 +49,13 @@ public class Ingredient {
 
     @Column(name = "extended_consumption_days")
     private Integer extendedConsumptionDays;
+
+    @Column(name = "is_staple", nullable = false)
+    private boolean staple;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "allergens", columnDefinition = "text[]", nullable = false)
+    private List<String> allergens = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

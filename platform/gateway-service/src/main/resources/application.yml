@@ -31,6 +31,14 @@ spring:
                 - Path=/api/cart/**
               filters:
                 - RemoveRequestHeader=Authorization
+            - id: order-payment-service-carts
+              uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
+              predicates:
+                - Path=/api/carts/**
+              filters:
+                - RemoveRequestHeader=Authorization
+                - RewritePath=/api/carts/(?<segment>.*), /api/cart/${segment}
+                - RewritePath=/api/carts, /api/cart
             - id: order-payment-service-orders
               uri: ${ORDER_PAYMENT_SERVICE_URI:http://order-payment-service.default.svc.cluster.local:8084}
               predicates:
@@ -55,6 +63,25 @@ spring:
                 - Path=/api/categories/**
               filters:
                 - RemoveRequestHeader=Authorization
+            - id: pantry-recipe-service-pantry-items
+              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+              predicates:
+                - Path=/api/pantry-items/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: pantry-recipe-service-recipes
+              uri: ${PANTRY_RECIPE_SERVICE_URI:http://pantry-recipe-service.default.svc.cluster.local:8082}
+              predicates:
+                - Path=/api/recipes/**
+              filters:
+                - RemoveRequestHeader=Authorization
+            - id: notification-service-notifications
+              uri: ${NOTIFICATION_SERVICE_URI:http://notification-service.default.svc.cluster.local:8085}
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - RemoveRequestHeader=Authorization
+
 # user-service와 반드시 동일해야 하는 JWT 서명 공유 시크릿 (HS256, 최소 32byte)
 security:
   jwt:
@@ -68,8 +95,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, prometheus
   endpoint:
     health:
       probes:
         enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

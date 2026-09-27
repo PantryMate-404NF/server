@@ -4,6 +4,7 @@ import com.pantrymate.user.domain.AuthProvider;
 import com.pantrymate.user.domain.User;
 import com.pantrymate.user.domain.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 public record UserProfileResponseDto(
@@ -18,6 +19,10 @@ public record UserProfileResponseDto(
                         example = "https://k.kakaocdn.net/profile.jpg",
                         nullable = true)
                 String profileImageUrl,
+        @Schema(description = "소셜 제공자가 휴대폰 번호를 제공하지 않으면 null", example = "01012345678", nullable = true)
+                String phoneNumber,
+        @Schema(description = "소셜 제공자가 생년월일을 제공하지 않으면 null", example = "1999-01-31", nullable = true)
+                LocalDate birthDate,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) UserRole role,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean onboardingCompleted,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) OffsetDateTime createdAt,
@@ -30,6 +35,8 @@ public record UserProfileResponseDto(
                 user.getEmail(),
                 user.getNickname(),
                 user.getProfileImageUrl(),
+                user.getPhoneNumber(),
+                user.getBirthDate(),
                 user.getRole(),
                 onboardingCompleted,
                 user.getCreatedAt(),

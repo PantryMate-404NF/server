@@ -1,6 +1,7 @@
 package com.pantrymate.pantryrecipe.recipe.application;
 
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.pantryrecipe.ai.application.AiEventRecorder;
 import com.pantrymate.pantryrecipe.pantry.application.PantryItemService;
 import com.pantrymate.pantryrecipe.recipe.domain.CookingHistory;
 import com.pantrymate.pantryrecipe.recipe.domain.CookingHistoryRepository;
@@ -19,22 +20,28 @@ public class CookingHistoryService {
     private final CookingHistoryRepository cookingHistoryRepository;
     private final PantryItemService pantryItemService;
 
+    private final AiEventRecorder aiEventRecorder;
+
     public CookingHistoryService(
             RecipeRepository recipeRepository,
             CookingHistoryRepository cookingHistoryRepository,
-            PantryItemService pantryItemService) {
+            PantryItemService pantryItemService,
+            AiEventRecorder aiEventRecorder) {
         this.recipeRepository = recipeRepository;
         this.cookingHistoryRepository = cookingHistoryRepository;
         this.pantryItemService = pantryItemService;
+        this.aiEventRecorder = aiEventRecorder;
     }
 
     @Transactional
-    public CookingHistoryResponseDto complete(Long userId, Long recipeId, List<Long> pantryItemIds) {
+    public CookingHistoryResponseDto complete(
+            Long userId, Long recipeId, List<Long> pantryItemIds, String requestId, Integer position) {
         Recipe recipe = recipeRepository
                 .findByRecipeIdAndPublishedTrue(recipeId)
                 .orElseThrow(() -> new BusinessException(RecipeErrorCode.RECIPE_NOTFOUND_ID));
 
         CookingHistory history = cookingHistoryRepository.save(CookingHistory.create(userId, recipe));
+        aiEventRecorder.record(userId, AiEventRecorder.COOK, recipeId, requestId, position);
 
         if (pantryItemIds != null && !pantryItemIds.isEmpty()) {
             pantryItemService.deleteAllByUser(userId, pantryItemIds);

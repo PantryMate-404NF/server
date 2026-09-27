@@ -3,6 +3,7 @@ package com.pantrymate.user.presentation.controller;
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
 import com.pantrymate.user.application.UserService;
+import com.pantrymate.user.presentation.dto.OnboardingFoodListResponseDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceResponseDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceUpdateRequestDto;
 import com.pantrymate.user.presentation.dto.UserProfileResponseDto;
@@ -47,6 +48,20 @@ public class UserController {
     }
 
     @Operation(
+            summary = "온보딩 음식 목록 조회",
+            description = "온보딩 화면에 보여줄 음식 목록(AI 서버 제공)을 조회한다. 목록은 바뀔 수 있으므로 화면을 그리기 직전에 조회하고, "
+                    + "사용자가 고른 음식은 name 그대로 PUT /preferences의 favoriteFoods에 담아 보낸다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "503", description = "ONBOARD-UNAVAILABLE-FOODS — AI 서버 응답 실패·시간 초과")
+    })
+    @GetMapping("/onboarding/foods")
+    public ResponseEntity<ApiResponse<OnboardingFoodListResponseDto>> onboardingFoods() {
+        return ResponseEntity.ok(ApiResponse.success("온보딩 음식 목록 조회가 완료되었습니다.", userService.getOnboardingFoods()));
+    }
+
+    @Operation(
             summary = "개인화 온보딩 설정 조회",
             description = "저장된 개인화 온보딩 설정과 마지막 진행 단계를 조회한다. "
                     + "온보딩 중 건너뛰기/강제종료로 이탈한 사용자가 마이페이지에서 재진입할 때, 반환된 onboardingStep부터 이어서 진행한다.")
@@ -77,8 +92,8 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "저장 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "400",
-                description = "ONBOARD-INVALID-INPUT — familyMemberCount(1~20)/onboardingStep(1 이상) 누락 또는 범위 초과, "
-                        + "preferredFoodTypes 허용값 외 값·중복·5개 초과, allergies 중복·20개 초과, "
+                description = "ONBOARD-INVALID-INPUT — familyMemberCount(1~10)/onboardingStep(1 이상) 누락 또는 범위 초과, "
+                        + "preferredFoodTypes 허용값 외 값·중복·5개 초과, allergies 허용 19종 외 값·중복, "
                         + "favoriteFoods 3개 미만(비어있지 않은 경우)·중복·10개 초과, "
                         + "tastePreferences 값 지정 시 salty/sweet/spicy 중 1~5 범위를 벗어나거나 누락된 항목 존재"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

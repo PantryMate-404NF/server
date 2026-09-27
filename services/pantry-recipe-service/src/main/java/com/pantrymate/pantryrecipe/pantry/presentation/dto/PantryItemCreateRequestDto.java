@@ -22,5 +22,11 @@ public record PantryItemCreateRequestDto(
                         allowableValues = {"REFRIGERATED", "FROZEN", "ROOM_TEMP"},
                         requiredMode = Schema.RequiredMode.REQUIRED)
                 String storageType,
-        @Schema(description = "식재료 이미지 URL") String imageUrl) {
+        @Schema(description = "식재료 이미지 URL") String imageUrl,
+        @Schema(
+                        description = "구매일(YYYY-MM-DD). 영수증 사진 등록 시 OCR로 읽은 구매일을 넣는다. "
+                                + "유통기한·소비기한이 모두 없으면 이 날짜(없으면 등록일)를 기준으로 소비기한이 자동 계산됨",
+                        example = "2026-09-25",
+                        nullable = true)
+                String purchaseDate) {
 }
