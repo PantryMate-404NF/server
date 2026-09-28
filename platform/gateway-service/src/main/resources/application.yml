@@ -8,6 +8,10 @@ spring:
     gateway:
       server:
         webflux:
+          # gateway(SecurityConfig)와 다운스트림 서비스가 모두 CORS 헤더를 붙여 값이 중복되면
+          # 브라우저가 응답을 차단하므로, 프록시 응답의 CORS 헤더를 하나로 정리한다.
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Methods Access-Control-Allow-Headers Access-Control-Expose-Headers Vary, RETAIN_UNIQUE
           routes:
             - id: user-service-auth
               # k8s에서는 Service DNS로 직접 라우팅(Eureka 등 별도 디스커버리 불필요).
