@@ -12,6 +12,12 @@ spring:
       ddl-auto: update
 
 management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://otel-collector.monitoring.svc.cluster.local:4318/v1/traces
   endpoints:
     web:
       exposure:

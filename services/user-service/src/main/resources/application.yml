@@ -52,6 +52,12 @@ app:
   frontend-callback-url: ${FRONTEND_CALLBACK_URL:http://localhost:3000/auth/callback}
 
 management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://otel-collector.monitoring.svc.cluster.local:4318/v1/traces
   endpoints:
     web:
       exposure:
