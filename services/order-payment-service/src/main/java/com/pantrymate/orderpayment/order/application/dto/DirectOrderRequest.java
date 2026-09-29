@@ -1,16 +1,16 @@
 package com.pantrymate.orderpayment.order.application.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
+import jakarta.validation.constraints.Positive;
 
-public record OrderCreateRequest(
+public record DirectOrderRequest(
     @NotNull
-    Long cartId,
+    Long productId,
 
-    @NotEmpty
-    List<Long> selectedCartItemIds,
+    @NotNull
+    @Positive
+    Integer quantity,
 
     @NotNull
     @Valid

@@ -65,9 +65,22 @@ public class Orders {
     @Version
     private Long version;
 
+    @Column(nullable = false)
+    private String recipientName;
+
+    @Column(nullable = false)
+    private String recipientPhone;
+
+    @Column(nullable = false)
+    private String zipCode;
+
+    @Column(nullable = false)
+    private String address;
+
+    private String addressDetail;
 
     public static Orders create(Long userId, String orderName, Long totalAmount,
-        String idempotencyKey) {
+        String idempotencyKey, String recipientName, String recipientPhone, String zipCode, String address, String addressDetail) {
         String orderId = "ORDER_" + UuidCreator.getTimeOrderedEpoch().toString().replace("-", "");
 
         return Orders.builder()
@@ -77,6 +90,11 @@ public class Orders {
             .orderName(orderName)
             .totalAmount(totalAmount)
             .status(OrderStatus.PENDING)
+            .recipientName(recipientName)
+            .recipientPhone(recipientPhone)
+            .zipCode(zipCode)
+            .address(address)
+            .addressDetail(addressDetail)
             .build();
     }
 
@@ -94,13 +112,14 @@ public class Orders {
         this.status = OrderStatus.FAILED;
     }
 
-    public void requestCancel(){
+    public void requestCancel() {
         if (!this.status.canTransitionTo(OrderStatus.CANCEL_REQUESTED)) {
             throw new IllegalStateException("현재 상태에서 취소 요청으로 전환할 수 없습니다.");
         }
         this.status = OrderStatus.CANCEL_REQUESTED;
     }
-    public void completeCancel(){
+
+    public void completeCancel() {
         if (!this.status.canTransitionTo(OrderStatus.CANCELLED)) {
             throw new IllegalStateException("현재 상태에서 취소 완료로 전환할 수 없습니다.");
         }

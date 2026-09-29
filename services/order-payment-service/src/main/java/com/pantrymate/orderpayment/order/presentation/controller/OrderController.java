@@ -2,6 +2,7 @@ package com.pantrymate.orderpayment.order.presentation.controller;
 
 import com.pantrymate.common.dto.ApiResponse;
 import com.pantrymate.common.dto.CurrentUser;
+import com.pantrymate.orderpayment.order.application.dto.DirectOrderRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateResponse;
 import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
@@ -40,6 +41,17 @@ public class OrderController {
         Orders order = orderService.createOrder(currentUser.userId(), request, idempotencyKey);
         OrderCreateResponse response = OrderCreateResponse.from(order);
         return ApiResponse.success("정상적으로 주문서 생성이 완료되었습니다.", response);
+    }
+
+    @PostMapping("/direct")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<OrderCreateResponse> createDirectOrder(CurrentUser currentUser,
+        @RequestHeader("Idempotency-Key") String idempotencyKey,
+        @Valid @RequestBody DirectOrderRequest request
+        ){
+        Orders order = orderService.createDirectOrder(currentUser.userId(), request, idempotencyKey);
+        OrderCreateResponse response = OrderCreateResponse.from(order);
+        return ApiResponse.success("정상적으로 바로 주문하기 주문서 생성이 완료되었습니다.", response);
     }
 
     @GetMapping

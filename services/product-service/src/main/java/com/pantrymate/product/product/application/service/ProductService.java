@@ -59,12 +59,17 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public ProductListResponse getProductList(Long categoryId, Pageable pageable) {
+    public ProductListResponse getProductList(Long categoryId, boolean purchasableOnly,
+        Pageable pageable) {
+        List<ProductStatus> statuses = purchasableOnly
+            ? List.of(ProductStatus.ON_SALE)
+            : List.of(ProductStatus.ON_SALE, ProductStatus.OUT_OF_STOCK);
+
         Page<Products> productPage = (categoryId == null)
-            ? productRepository.findByDeletedAtIsNullAndStatusNot(ProductStatus.DISCONTINUED,
-            pageable)
-            : productRepository.findByCategoryIdAndDeletedAtIsNullAndStatusNot(categoryId,
-                ProductStatus.DISCONTINUED, pageable);
+            ? productRepository.findByDeletedAtIsNullAndStatusIn(statuses, pageable)
+            : productRepository.findByCategoryIdAndDeletedAtIsNullAndStatusIn(categoryId, statuses,
+                pageable);
+
         Page<ProductSummaryResponse> summaryPages = productPage.map(ProductSummaryResponse::from);
 
         return ProductListResponse.from(summaryPages);
@@ -97,7 +102,7 @@ public class ProductService {
         if (request.categoryId() != null && !categoryRepository.existsById(request.categoryId())) {
             throw new BusinessException(CategoryErrorCode.CATEGORY_NOT_FOUND);
         }
-        if(request.thumbnailUrl() != null && request.thumbnailUrl().isBlank()) {
+        if (request.thumbnailUrl() != null && request.thumbnailUrl().isBlank()) {
             throw new BusinessException(ProductErrorCode.THUMBNAIL_REQUIRED);
         }
         if (request.price() != null && request.price() <= 0) {
@@ -125,11 +130,11 @@ public class ProductService {
         Products product = productRepository.findById(productId)
             .filter(p -> !p.isDeleted())
             .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
-        try{
+        try {
             product.restock(quantity);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             throw new BusinessException(ProductErrorCode.INVALID_QUANTITY);
-        }catch (IllegalStateException e){
+        } catch (IllegalStateException e) {
             throw new BusinessException(ProductErrorCode.CANNOT_RESTOCK_DISCONTINUED);
         }
         return product;
@@ -138,12 +143,12 @@ public class ProductService {
     @Transactional
     public Products discontinueProduct(Long productId) {
         Products product = productRepository.findById(productId)
-            .filter(p-> !p.isDeleted())
+            .filter(p -> !p.isDeleted())
             .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
-        try{
+        try {
             product.discontinue();
-        }catch (IllegalStateException e){
-            throw  new BusinessException(ProductErrorCode.ALREADY_DISCONTINUED);
+        } catch (IllegalStateException e) {
+            throw new BusinessException(ProductErrorCode.ALREADY_DISCONTINUED);
         }
         return product;
     }
@@ -151,11 +156,11 @@ public class ProductService {
     @Transactional
     public Products deleteProduct(Long productId) {
         Products product = productRepository.findById(productId)
-            .filter(p-> !p.isDeleted())
+            .filter(p -> !p.isDeleted())
             .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
-        try{
+        try {
             product.delete();
-        }catch (IllegalStateException e){
+        } catch (IllegalStateException e) {
             throw new BusinessException(ProductErrorCode.INVALID_PRODUCT_STATUS);
         }
         return product;
@@ -188,8 +193,9 @@ public class ProductService {
     @Transactional
     public void productDecreaseStocks(StockDeductionRequest request) {
         request.items().forEach(item -> {
-            int updatedRows = productRepository.decreaseStockAtomic(item.productId(), item.quantity());
-            if (updatedRows == 0){
+            int updatedRows = productRepository.decreaseStockAtomic(item.productId(),
+                item.quantity());
+            if (updatedRows == 0) {
                 productRepository.findById(item.productId())
                     .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
@@ -208,17 +214,34 @@ public class ProductService {
     @Transactional
     public void productIncreaseStocks(StockRestoreRequest request) {
         request.items().forEach(item -> {
-            Products product = productRepository.findById(item.productId())
-                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
-            int updatedRows = productRepository.increaseStockAtomic(item.productId(), item.quantity());
-            if (updatedRows == 0){
+            int updatedRows = productRepository.increaseStockAtomic(item.productId(),
+                item.quantity());
+            if (updatedRows == 0) {
                 throw new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND);
             }
-            if(product.getStatus() == ProductStatus.ON_SALE){
+            Products product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND));
+            if (product.getStatus() == ProductStatus.OUT_OF_STOCK) {
                 product.markOnSale();
             }
 
         });
     }
+
+    @Transactional(readOnly = true)
+    public ProductListResponse searchProducts(String keyword, Pageable pageable) {
+        String trimmedKeyword = keyword.trim();
+
+        Page<Products> productsPage = productRepository.findByNameContainingAndDeletedAtIsNullAndStatusIn(
+            trimmedKeyword,
+            List.of(ProductStatus.ON_SALE, ProductStatus.OUT_OF_STOCK),
+            pageable
+        );
+
+        Page<ProductSummaryResponse> summaryPage = productsPage.map(ProductSummaryResponse::from);
+
+        return ProductListResponse.from(summaryPage);
+    }
+
 
 }
