@@ -155,7 +155,7 @@ public class ProductController {
         if (keyword == null || keyword.isBlank()) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT);
         }
-        if (page < 0 || size <= 0) {
+        if (page < 0 || size <= 0 || size > 100) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT);
         }
 

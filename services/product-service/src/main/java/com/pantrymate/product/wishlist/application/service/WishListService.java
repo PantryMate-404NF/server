@@ -32,6 +32,9 @@ public class WishListService {
         if (product.isDeleted()) {
             throw new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND);
         }
+        if (product.getStatus() == ProductStatus.DISCONTINUED) {
+            throw new BusinessException(ProductErrorCode.PRODUCT_NOT_FOUND);
+        }
         if (wishlistRepository.existsByUserIdAndProductId(userId, productId)) {
             return;
         }

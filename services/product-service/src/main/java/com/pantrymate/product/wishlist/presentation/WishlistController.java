@@ -48,7 +48,7 @@ public class WishlistController {
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "60") int size
     ){
-        if(page < 0 || size <= 0){
+        if(page < 0 || size <= 0 || size > 100){
             throw new BusinessException(CommonErrorCode.INVALID_INPUT);
         }
         Pageable pageable = PageRequest.of(page, size);
