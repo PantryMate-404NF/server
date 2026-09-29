@@ -35,6 +35,8 @@ public class AiOcrClient implements ReceiptOcrGateway {
             @Value("${ai.ocr.timeout-seconds}") long timeoutSeconds) {
         JdkClientHttpRequestFactory requestFactory =
                 new JdkClientHttpRequestFactory(HttpClient.newBuilder()
+                        // HTTP/2 h2c 업그레이드 시도 시 AI 서버(HTTP/1.1)가 청크 바디를 못 읽고 필드 누락으로 오인해 400을 준다.
+                        .version(HttpClient.Version.HTTP_1_1)
                         .connectTimeout(Duration.ofSeconds(3))
                         .build());
         // 명세: BE 호출 타임아웃 30초, 재시도 없음
@@ -58,7 +60,7 @@ public class AiOcrClient implements ReceiptOcrGateway {
         try {
             return restClient
                     .post()
-                    .uri("/v1/ocr/receipts")
+                    .uri("/v1/ocr/receipt")
                     .header("X-Internal-Api-Key", apiKey)
                     .header("X-Request-Id", requestId)
                     .contentType(MediaType.MULTIPART_FORM_DATA)

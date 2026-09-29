@@ -29,6 +29,7 @@ public class AiRecommendClient implements RecommendationPort {
             @Value("${ai.recommend.timeout-ms}") long timeoutMs) {
         JdkClientHttpRequestFactory requestFactory =
                 new JdkClientHttpRequestFactory(HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
                         .connectTimeout(Duration.ofMillis(500))
                         .build());
         requestFactory.setReadTimeout(Duration.ofMillis(timeoutMs));

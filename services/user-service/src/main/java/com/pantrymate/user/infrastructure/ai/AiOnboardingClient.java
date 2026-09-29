@@ -34,7 +34,10 @@ public class AiOnboardingClient implements OnboardingPort {
             @Value("${ai.onboarding.internal-api-key}") String apiKey,
             @Value("${ai.onboarding.timeout-ms}") long timeoutMs) {
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(
-                HttpClient.newBuilder().connectTimeout(Duration.ofMillis(500)).build());
+                HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .connectTimeout(Duration.ofMillis(500))
+                        .build());
         requestFactory.setReadTimeout(Duration.ofMillis(timeoutMs));
         this.restClient = RestClient.builder().baseUrl(baseUrl).requestFactory(requestFactory).build();
         this.apiKey = apiKey;

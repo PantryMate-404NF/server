@@ -29,7 +29,11 @@ public class AiEventClient implements AiEventSink {
             @Value("${ai.events.internal-api-key}") String apiKey,
             @Value("${ai.events.timeout-ms}") long timeoutMs) {
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(
-                HttpClient.newBuilder().connectTimeout(Duration.ofMillis(500)).build());
+                // HTTP/2 h2c 업그레이드 시도 시 AI 서버(HTTP/1.1)가 청크 바디를 못 읽고 필드 누락으로 오인해 400을 준다.
+                HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .connectTimeout(Duration.ofMillis(500))
+                        .build());
         requestFactory.setReadTimeout(Duration.ofMillis(timeoutMs));
         this.restClient = RestClient.builder().baseUrl(baseUrl).requestFactory(requestFactory).build();
         this.apiKey = apiKey;
