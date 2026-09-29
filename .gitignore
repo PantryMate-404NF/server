@@ -52,6 +52,3 @@ CLAUDE.md
 ### Firebase service account keys (never commit) ###
 firebase-service-account*.json
 *-service-account*.json
-
-### 팬트리 이미지 로컬 임시 업로드(정식 배포 전 임시 저장소) ###
-/services/pantry-recipe-service/uploads/
