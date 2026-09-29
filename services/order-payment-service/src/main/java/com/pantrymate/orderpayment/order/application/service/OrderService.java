@@ -8,6 +8,7 @@ import com.pantrymate.orderpayment.cart.domain.repository.CartRepository;
 import com.pantrymate.orderpayment.order.application.dto.DeliveryAddressRequest;
 import com.pantrymate.orderpayment.order.application.dto.DirectOrderRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
+import com.pantrymate.orderpayment.order.application.dto.OrderItemSummary;
 import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
 import com.pantrymate.orderpayment.order.application.dto.OrderSummaryResponse;
 import com.pantrymate.orderpayment.order.domain.enums.OrderStatus;
@@ -19,7 +20,9 @@ import com.pantrymate.orderpayment.order.domain.exception.OrderErrorCode;
 import com.pantrymate.orderpayment.order.domain.repository.OrderItemRepository;
 import com.pantrymate.orderpayment.order.domain.repository.OrderRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -105,11 +108,23 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderListResponse getOrderList(Long userId, Pageable pageable) {
         Page<Orders> orderPage = orderRepository.findByUserIdAndStatusNotIn(
-            userId,
-            List.of(OrderStatus.PENDING, OrderStatus.FAILED),
-            pageable
-        );
-        Page<OrderSummaryResponse> summaryPage = orderPage.map(OrderSummaryResponse::from);
+            userId, List.of(OrderStatus.PENDING, OrderStatus.FAILED), pageable);
+
+        List<Long> orderIds = orderPage.getContent().stream()
+            .map(Orders::getId)
+            .toList();
+
+        List<OrderItems> allItems = orderItemRepository.findByOrderIdIn(orderIds);
+
+        Map<Long, List<OrderItemSummary>> itemsByOrderId = allItems.stream()
+            .collect(Collectors.groupingBy(
+                OrderItems::getOrderId,
+                Collectors.mapping(OrderItemSummary::from, Collectors.toList())
+            ));
+
+        Page<OrderSummaryResponse> summaryPage = orderPage.map(order ->
+            OrderSummaryResponse.of(order, itemsByOrderId.getOrDefault(order.getId(), List.of())));
+
         return OrderListResponse.from(summaryPage);
     }
 

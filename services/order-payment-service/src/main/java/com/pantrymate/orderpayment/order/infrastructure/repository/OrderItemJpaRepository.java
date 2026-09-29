@@ -10,6 +10,9 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItems, Long>,
 
     @Override
     List<OrderItems> findByOrderId(Long orderId);
+
+    @Override
+    List<OrderItems> findByOrderIdIn(List<Long> orderIds);
     
 
     
