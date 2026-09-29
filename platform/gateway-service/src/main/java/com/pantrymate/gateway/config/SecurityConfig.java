@@ -45,6 +45,8 @@ public class SecurityConfig {
                                 "/api/products/{productId:[0-9]+}",
                                 "/api/categories")
                         .permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/pantry-items/images/**")
+                        .permitAll()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtDecoder(jwtDecoder)))
                 .addFilterAfter(new JwtClaimForwardingFilter(), SecurityWebFiltersOrder.AUTHENTICATION)

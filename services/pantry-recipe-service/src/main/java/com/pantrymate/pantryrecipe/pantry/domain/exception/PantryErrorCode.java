@@ -13,7 +13,9 @@ public enum PantryErrorCode implements ErrorCode {
     PANTRY_INVALID_RECEIPT(
             HttpStatus.BAD_REQUEST,
             "PANTRY-INVALID-RECEIPT",
-            "영수증 이미지는 JPEG·PNG·WebP·HEIC 형식의 10MB 이하 파일 1장과 영수증 ID가 필요합니다.");
+            "영수증 이미지는 JPEG·PNG·WebP·HEIC 형식의 10MB 이하 파일 1장과 영수증 ID가 필요합니다."),
+    PANTRY_INVALID_IMAGE(
+            HttpStatus.BAD_REQUEST, "PANTRY-INVALID-IMAGE", "이미지는 JPEG·PNG·WebP 형식의 5MB 이하 파일 1장이어야 합니다.");
 
     private final HttpStatus status;
     private final String code;
