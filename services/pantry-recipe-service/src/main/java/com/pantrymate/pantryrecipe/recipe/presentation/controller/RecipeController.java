@@ -95,8 +95,9 @@ public class RecipeController {
     }
 
     @Operation(
-            summary = "레시피 추천 목록 조회",
-            description = "현재 개발상으로는 개인화 없이 공개된 DB 기본/큐레이션 레시피를 페이지 단위로 반환한다. "
+            summary = "레시피 목록 조회",
+            description = "공개된 레시피를 페이지 단위로 반환한다. 로그인·개인화 정보(취향/팬트리)는 반영하지 않는다. "
+                    + "개인화 추천이 필요하면 GET /api/recipes/recommendations를 사용한다. "
                     + "ingredientIds(최대 3개)를 전달하면 해당 식재료가 포함된 레시피를 매칭 개수순으로 우선 노출하고, "
                     + "나머지 레시피를 뒤이어 반환한다(빈 결과 없음).")
     @io.swagger.v3.oas.annotations.responses.ApiResponses({

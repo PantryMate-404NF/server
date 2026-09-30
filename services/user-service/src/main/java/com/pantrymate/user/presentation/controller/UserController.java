@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -73,6 +74,25 @@ public class UserController {
             @Parameter(hidden = true) CurrentUser currentUser, @RequestBody UserProfileUpdateRequestDto request) {
         UserProfileResponseDto response = userService.updateProfile(currentUser.userId(), request);
         return ResponseEntity.ok(ApiResponse.success("프로필이 수정되었습니다.", response));
+    }
+
+    @Operation(
+            summary = "회원 탈퇴",
+            description = "회원 정보를 DB에서 즉시 하드 삭제한다(복구 불가). 배송지·온보딩 설정도 함께 삭제되며, "
+                    + "저장된 Refresh Token도 함께 무효화된다. 단, 이미 발급된 Access Token은 자체 만료 시각까지는 유효하다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "탈퇴 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "Bearer 토큰 누락/무효 — API Gateway 단에서 차단되어 이 서비스까지 도달하지 않고, "
+                        + "공통 응답 규격이 아닌 Gateway의 기본 401(바디 없음)이 내려간다. "
+                        + "AUTH-UNAUTHORIZED는 X-User-Id 헤더 없이 이 서비스가 직접 호출된 경우에만 발생하는 내부 폴백 코드."),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER-NOTFOUND-ID")
+    })
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<Void>> delete(@Parameter(hidden = true) CurrentUser currentUser) {
+        userService.delete(currentUser.userId());
+        return ResponseEntity.ok(ApiResponse.success("회원 탈퇴가 완료되었습니다.", null));
     }
 
     @Operation(

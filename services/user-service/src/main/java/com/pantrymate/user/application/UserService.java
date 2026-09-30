@@ -10,6 +10,7 @@ import com.pantrymate.user.domain.UserPreferenceRepository;
 import com.pantrymate.user.domain.UserPreferenceUpdatedEvent;
 import com.pantrymate.user.domain.UserRepository;
 import com.pantrymate.user.domain.exception.UserErrorCode;
+import com.pantrymate.user.infrastructure.jwt.RefreshTokenRepository;
 import com.pantrymate.user.presentation.dto.OnboardingFoodListResponseDto;
 import com.pantrymate.user.presentation.dto.TastePreferenceDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceResponseDto;
@@ -48,16 +49,19 @@ public class UserService {
     private final UserPreferenceRepository userPreferenceRepository;
     private final OnboardingPort onboardingPort;
     private final ApplicationEventPublisher eventPublisher;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public UserService(
             UserRepository userRepository,
             UserPreferenceRepository userPreferenceRepository,
             OnboardingPort onboardingPort,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.userPreferenceRepository = userPreferenceRepository;
         this.onboardingPort = onboardingPort;
         this.eventPublisher = eventPublisher;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     /** 화면을 그리기 직전의 목록이 필요하므로 캐시하지 않고 매번 AI에서 받는다. */
@@ -221,6 +225,13 @@ public class UserService {
 
     private boolean isValidTasteLevel(Integer level) {
         return level != null && level >= MIN_TASTE_LEVEL && level <= MAX_TASTE_LEVEL;
+    }
+
+    @Transactional
+    public void delete(Long userId) {
+        getUserByIdOrThrow(userId);
+        userRepository.deleteById(userId);
+        refreshTokenRepository.delete(userId);
     }
 
     private User getUserByIdOrThrow(Long userId) {
