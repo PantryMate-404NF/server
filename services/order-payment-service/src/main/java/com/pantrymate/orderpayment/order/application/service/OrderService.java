@@ -9,6 +9,8 @@ import com.pantrymate.orderpayment.cart.domain.repository.CartRepository;
 import com.pantrymate.orderpayment.order.application.dto.DeliveryAddressRequest;
 import com.pantrymate.orderpayment.order.application.dto.DirectOrderRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
+import com.pantrymate.orderpayment.order.application.dto.OrderDetailResponse;
+import com.pantrymate.orderpayment.order.application.dto.OrderItemDetail;
 import com.pantrymate.orderpayment.order.application.dto.OrderItemSummary;
 import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
 import com.pantrymate.orderpayment.order.application.dto.OrderSummaryResponse;
@@ -130,6 +132,19 @@ public class OrderService {
             OrderSummaryResponse.of(order, itemsByOrderId.getOrDefault(order.getId(), List.of())));
 
         return OrderListResponse.from(summaryPage);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse getOrderDetail(Long userId, String orderId) {
+        Orders order = orderRepository.findByOrderId(orderId)
+            .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException(OrderErrorCode.ORDER_NOT_FOUND);
+        }
+        List<OrderItemDetail> items = orderItemRepository.findByOrderId(order.getId()).stream()
+            .map(OrderItemDetail::from)
+            .toList();
+        return OrderDetailResponse.of(order, items);
     }
 
     @Transactional
