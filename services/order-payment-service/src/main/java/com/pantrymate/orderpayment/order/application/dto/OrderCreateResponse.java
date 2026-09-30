@@ -6,15 +6,20 @@ import java.time.LocalDateTime;
 public record OrderCreateResponse(
     String orderId,
     Long totalAmount,
+    Long productAmount,
+    Long shippingFee,
     String name,
     String status,
     LocalDateTime createdAt
 
 ) {
+
     public static OrderCreateResponse from(Orders order) {
         return new OrderCreateResponse(
             order.getOrderId(),
             order.getTotalAmount(),
+            order.getTotalAmount() - Orders.SHIPPING_FEE,
+            Orders.SHIPPING_FEE,
             order.getOrderName(),
             order.getStatus().name(),
             order.getCreatedAt()

@@ -36,6 +36,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 @RequiredArgsConstructor
 public class OrderService {
 
+
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductServiceClient productServiceClient;
@@ -76,7 +77,7 @@ public class OrderService {
             }).toList();
         long totalAmount = validateItems.stream()
             .mapToLong(v -> v.product().price() * v.items().getQuantity())
-            .sum();
+            .sum() + Orders.SHIPPING_FEE;
         String orderName = createOrderName(validateItems);
         DeliveryAddressRequest addr = request.deliveryAddress();
         try {
@@ -144,7 +145,7 @@ public class OrderService {
             .data();
         validateProductAvailable(infoResponse, request.quantity());
 
-        Long totalAmount = infoResponse.price() * request.quantity();
+        Long totalAmount = infoResponse.price() * request.quantity() + Orders.SHIPPING_FEE;
         String orderName = infoResponse.name();
         DeliveryAddressRequest addr = request.deliveryAddress();
 
