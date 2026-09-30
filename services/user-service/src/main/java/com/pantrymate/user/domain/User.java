@@ -77,9 +77,20 @@ public class User {
         return new User(provider, providerId, email, nickname, profileImageUrl);
     }
 
-    public void updateProfile(String nickname, String profileImageUrl) {
-        this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
+    /** 부분 수정 — null인 필드는 기존 값을 유지한다. */
+    public void updateProfile(String nickname, String profileImageUrl, String phoneNumber, LocalDate birthDate) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
+        if (phoneNumber != null) {
+            this.phoneNumber = phoneNumber;
+        }
+        if (birthDate != null) {
+            this.birthDate = birthDate;
+        }
     }
 
     @PrePersist

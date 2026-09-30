@@ -15,9 +15,12 @@ import com.pantrymate.user.presentation.dto.TastePreferenceDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceResponseDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceUpdateRequestDto;
 import com.pantrymate.user.presentation.dto.UserProfileResponseDto;
+import com.pantrymate.user.presentation.dto.UserProfileUpdateRequestDto;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +39,10 @@ public class UserService {
     private static final int MAX_TASTE_LEVEL = 5;
     private static final Set<String> ALLOWED_PREFERRED_FOOD_TYPES =
             Set.of("KOREAN", "WESTERN", "JAPANESE", "CHINESE", "ETC");
+    private static final int MIN_NICKNAME_LENGTH = 2;
+    private static final int MAX_NICKNAME_LENGTH = 20;
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^01[0-9]\\d{7,8}$");
+    private static final LocalDate MIN_BIRTH_DATE = LocalDate.of(1900, 1, 1);
 
     private final UserRepository userRepository;
     private final UserPreferenceRepository userPreferenceRepository;
@@ -70,6 +77,35 @@ public class UserService {
                 .map(UserPreference::isOnboardingCompleted)
                 .orElse(false);
         return UserProfileResponseDto.of(user, onboardingCompleted);
+    }
+
+    @Transactional
+    public UserProfileResponseDto updateProfile(Long userId, UserProfileUpdateRequestDto request) {
+        User user = getUserByIdOrThrow(userId);
+        validateProfileUpdate(request);
+
+        user.updateProfile(request.nickname(), request.profileImageUrl(), request.phoneNumber(), request.birthDate());
+
+        boolean onboardingCompleted = userPreferenceRepository
+                .findByUserId(userId)
+                .map(UserPreference::isOnboardingCompleted)
+                .orElse(false);
+        return UserProfileResponseDto.of(user, onboardingCompleted);
+    }
+
+    private void validateProfileUpdate(UserProfileUpdateRequestDto request) {
+        String nickname = request.nickname();
+        if (nickname != null && (nickname.length() < MIN_NICKNAME_LENGTH || nickname.length() > MAX_NICKNAME_LENGTH)) {
+            throw new BusinessException(UserErrorCode.USER_INVALID_NICKNAME);
+        }
+        String phoneNumber = request.phoneNumber();
+        if (phoneNumber != null && !PHONE_PATTERN.matcher(phoneNumber).matches()) {
+            throw new BusinessException(UserErrorCode.USER_INVALID_PHONE);
+        }
+        LocalDate birthDate = request.birthDate();
+        if (birthDate != null && (birthDate.isAfter(LocalDate.now()) || birthDate.isBefore(MIN_BIRTH_DATE))) {
+            throw new BusinessException(UserErrorCode.USER_INVALID_BIRTHDATE);
+        }
     }
 
     @Transactional(readOnly = true)

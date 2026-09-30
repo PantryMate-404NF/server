@@ -7,12 +7,14 @@ import com.pantrymate.user.presentation.dto.OnboardingFoodListResponseDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceResponseDto;
 import com.pantrymate.user.presentation.dto.UserPreferenceUpdateRequestDto;
 import com.pantrymate.user.presentation.dto.UserProfileResponseDto;
+import com.pantrymate.user.presentation.dto.UserProfileUpdateRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,6 +47,32 @@ public class UserController {
             @Parameter(hidden = true) CurrentUser currentUser) {
         UserProfileResponseDto profile = userService.getProfile(currentUser.userId());
         return ResponseEntity.ok(ApiResponse.success("프로필 조회가 완료되었습니다.", profile));
+    }
+
+    @Operation(
+            summary = "내 프로필 수정",
+            description = "닉네임/프로필 이미지/휴대폰 번호/생년월일을 수정한다. "
+                    + "부분 수정(partial update) 방식 — 값을 보낸 필드만 반영되고, 생략(null)한 필드는 기존 값이 유지된다. "
+                    + "소셜 로그인이 휴대폰 번호·생년월일을 제공하지 않은 경우 이 API로 직접 등록할 수 있다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "USER-INVALID-NICKNAME — 닉네임 2~20자 범위 벗어남 / "
+                        + "USER-INVALID-PHONE — 휴대폰 번호 형식 오류(01[0-9]로 시작하는 10~11자리 숫자) / "
+                        + "USER-INVALID-BIRTHDATE — 생년월일이 미래 날짜이거나 1900-01-01 이전"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "Bearer 토큰 누락/무효 — API Gateway 단에서 차단되어 이 서비스까지 도달하지 않고, "
+                        + "공통 응답 규격이 아닌 Gateway의 기본 401(바디 없음)이 내려간다. "
+                        + "AUTH-UNAUTHORIZED는 X-User-Id 헤더 없이 이 서비스가 직접 호출된 경우에만 발생하는 내부 폴백 코드."),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "USER-NOTFOUND-ID")
+    })
+    @PatchMapping
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> edit(
+            @Parameter(hidden = true) CurrentUser currentUser, @RequestBody UserProfileUpdateRequestDto request) {
+        UserProfileResponseDto response = userService.updateProfile(currentUser.userId(), request);
+        return ResponseEntity.ok(ApiResponse.success("프로필이 수정되었습니다.", response));
     }
 
     @Operation(
