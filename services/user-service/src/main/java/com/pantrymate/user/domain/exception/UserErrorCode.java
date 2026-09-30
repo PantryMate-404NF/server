@@ -17,6 +17,7 @@ public enum UserErrorCode implements ErrorCode {
     USER_INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "USER-INVALID-NICKNAME", "닉네임은 2자 이상 20자 이하로 입력해 주세요."),
     USER_INVALID_PHONE(HttpStatus.BAD_REQUEST, "USER-INVALID-PHONE", "휴대폰 번호 형식이 올바르지 않습니다."),
     USER_INVALID_BIRTHDATE(HttpStatus.BAD_REQUEST, "USER-INVALID-BIRTHDATE", "생년월일이 올바르지 않습니다."),
+    USER_INVALID_IMAGE(HttpStatus.BAD_REQUEST, "USER-INVALID-IMAGE", "이미지는 JPEG·PNG·WebP 형식의 5MB 이하 파일 1장이어야 합니다."),
 
     ADDRESS_INVALID_INPUT(HttpStatus.BAD_REQUEST, "USER-INVALID-ADDRESS", "배송지 입력값이 올바르지 않습니다."),
     ADDRESS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "USER-LIMIT-ADDRESS", "배송지는 최대 10개까지 등록할 수 있습니다."),
