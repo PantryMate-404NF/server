@@ -64,9 +64,9 @@ public class RecipeRecommendService {
     }
 
     /** AI 서버 호출(수 초)이 DB 트랜잭션을 붙잡지 않도록 이 메서드는 트랜잭션 없이 각 조회를 짧게 수행한다. */
-    public RecipeRecommendResponseDto recommend(Long userId, int size, Integer maxMinutes) {
+    public RecipeRecommendResponseDto recommend(Long userId, int size, Integer maxMinutes, boolean includePantry) {
         List<String> allergies = getAllergies(userId);
-        List<PantryEntry> pantry = buildPantry(userId);
+        List<PantryEntry> pantry = includePantry ? buildPantry(userId) : List.of();
 
         RecommendationQuery query = new RecommendationQuery(
                 userId,

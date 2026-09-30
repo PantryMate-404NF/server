@@ -64,7 +64,9 @@ public class RecipeController {
 
     @Operation(
             summary = "개인화 레시피 추천",
-            description = "AI 추천 서버가 사용자의 팬트리(요리가능 재료)와 알레르기를 반영해 추천한 레시피를 순위 순으로 반환한다. "
+            description = "AI 추천 서버가 사용자의 취향(온보딩+이용내역)과 알레르기를 반영해 추천한 레시피를 순위 순으로 반환한다. "
+                    + "includePantry=true(기본값)면 팬트리(요리가능 재료)도 함께 반영해 취향+재료 기반으로 추천하고(레시피 탭), "
+                    + "false면 팬트리를 제외하고 취향 기반으로만 추천한다(홈 화면). "
                     + "source=AI면 requestId를 이후 행동 이벤트에 함께 보내야 하고, AI를 쓸 수 없으면 source=POPULARITY(스크랩 수 기준, "
                     + "알레르기 재료 제외)로 대체된다. 알레르기 정보를 조회하지 못하면 안전을 위해 503을 반환한다.")
     @SecurityRequirement(name = "bearerAuth")
@@ -80,13 +82,15 @@ public class RecipeController {
     public ResponseEntity<ApiResponse<RecipeRecommendResponseDto>> recommendations(
             @Parameter(hidden = true) CurrentUser currentUser,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) Integer maxMinutes) {
+            @RequestParam(required = false) Integer maxMinutes,
+            @Parameter(description = "true(기본값)=취향+팬트리 재료 기반(레시피 탭), false=취향 전용(홈 화면)")
+                    @RequestParam(defaultValue = "true") boolean includePantry) {
         if (size <= 0 || size > MAX_PAGE_SIZE || (maxMinutes != null && maxMinutes <= 0)) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT);
         }
         deliveryAutoRegisterService.syncUser(currentUser.userId());
         RecipeRecommendResponseDto response =
-                recipeRecommendService.recommend(currentUser.userId(), size, maxMinutes);
+                recipeRecommendService.recommend(currentUser.userId(), size, maxMinutes, includePantry);
         return ResponseEntity.ok(ApiResponse.success("추천 레시피 조회가 완료되었습니다.", response));
     }
 
