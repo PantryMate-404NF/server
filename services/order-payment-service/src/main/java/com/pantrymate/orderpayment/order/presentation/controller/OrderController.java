@@ -5,6 +5,7 @@ import com.pantrymate.common.dto.CurrentUser;
 import com.pantrymate.orderpayment.order.application.dto.DirectOrderRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateRequest;
 import com.pantrymate.orderpayment.order.application.dto.OrderCreateResponse;
+import com.pantrymate.orderpayment.order.application.dto.OrderDetailResponse;
 import com.pantrymate.orderpayment.order.application.dto.OrderListResponse;
 import com.pantrymate.orderpayment.order.application.service.OrderService;
 import com.pantrymate.orderpayment.order.domain.Orders;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -64,6 +66,15 @@ public class OrderController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         OrderListResponse response = orderService.getOrderList(currentUser.userId(), status, pageable);
         return ApiResponse.success("정상적으로 주문 목록 조회가 되었습니다.", response);
+    }
+
+    @GetMapping("/{orderId}")
+    public ApiResponse<OrderDetailResponse> getOrderDetail(
+        CurrentUser currentUser,
+        @PathVariable String orderId
+    ){
+        OrderDetailResponse response = orderService.getOrderDetail(currentUser.userId(), orderId);
+        return ApiResponse.success("정상적으로 주문 상세 조회가 되었습니다.", response);
     }
 
 }
