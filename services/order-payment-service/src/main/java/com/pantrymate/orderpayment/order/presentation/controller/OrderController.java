@@ -57,11 +57,12 @@ public class OrderController {
     @GetMapping
     public ApiResponse<OrderListResponse> getOrderList(
         CurrentUser currentUser,
+        @RequestParam(required = false) String status,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size
     ){
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        OrderListResponse response = orderService.getOrderList(currentUser.userId(), pageable);
+        OrderListResponse response = orderService.getOrderList(currentUser.userId(), status, pageable);
         return ApiResponse.success("정상적으로 주문 목록 조회가 되었습니다.", response);
     }
 

@@ -1,6 +1,7 @@
 package com.pantrymate.orderpayment.order.application.service;
 
 import com.pantrymate.common.exception.BusinessException;
+import com.pantrymate.common.exception.CommonErrorCode;
 import com.pantrymate.orderpayment.cart.domain.CartItems;
 import com.pantrymate.orderpayment.cart.domain.Carts;
 import com.pantrymate.orderpayment.cart.domain.repository.CartItemRepository;
@@ -35,6 +36,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
+
 
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
@@ -76,7 +78,7 @@ public class OrderService {
             }).toList();
         long totalAmount = validateItems.stream()
             .mapToLong(v -> v.product().price() * v.items().getQuantity())
-            .sum();
+            .sum() + Orders.SHIPPING_FEE;
         String orderName = createOrderName(validateItems);
         DeliveryAddressRequest addr = request.deliveryAddress();
         try {
@@ -106,9 +108,11 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderListResponse getOrderList(Long userId, Pageable pageable) {
-        Page<Orders> orderPage = orderRepository.findByUserIdAndStatusNotIn(
-            userId, List.of(OrderStatus.PENDING, OrderStatus.FAILED), pageable);
+    public OrderListResponse getOrderList(Long userId, String status, Pageable pageable) {
+        Page<Orders> orderPage = (status == null || status.isBlank())
+            ? orderRepository.findByUserIdAndStatusNotIn(
+            userId, List.of(OrderStatus.PENDING, OrderStatus.FAILED), pageable)
+            : orderRepository.findByUserIdAndStatus(userId, parseStatus(status), pageable);
 
         List<Long> orderIds = orderPage.getContent().stream()
             .map(Orders::getId)
@@ -144,7 +148,7 @@ public class OrderService {
             .data();
         validateProductAvailable(infoResponse, request.quantity());
 
-        Long totalAmount = infoResponse.price() * request.quantity();
+        Long totalAmount = infoResponse.price() * request.quantity() + Orders.SHIPPING_FEE;
         String orderName = infoResponse.name();
         DeliveryAddressRequest addr = request.deliveryAddress();
 
@@ -188,6 +192,13 @@ public class OrderService {
             return firstProductName;
         } else {
             return firstProductName + " 외" + (item.size() - 1) + " 건";
+        }
+    }
+    private OrderStatus parseStatus(String status) {
+        try {
+            return OrderStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(CommonErrorCode.INVALID_INPUT);
         }
     }
 }

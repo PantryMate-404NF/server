@@ -21,4 +21,6 @@ public interface OrderRepository {
 
     Page<Orders> findByUserIdAndStatusNotIn(Long userId, List<OrderStatus> status, Pageable pageable);
 
+    Page<Orders> findByUserIdAndStatus(Long userId, OrderStatus status, Pageable pageable);
+
 }

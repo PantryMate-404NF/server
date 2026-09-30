@@ -30,6 +30,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
 public class Orders {
+    public static final long SHIPPING_FEE = 3000L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

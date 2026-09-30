@@ -23,4 +23,7 @@ public interface OrderJpaRepository extends JpaRepository<Orders, Long>, OrderRe
     @Override
     Page<Orders> findByUserIdAndStatusNotIn(Long userId, List<OrderStatus> status, Pageable pageable);
 
+    @Override
+    Page<Orders> findByUserIdAndStatus(Long userId, OrderStatus status, Pageable pageable);
+
 }
