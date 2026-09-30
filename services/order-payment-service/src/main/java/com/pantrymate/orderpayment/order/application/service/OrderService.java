@@ -94,7 +94,8 @@ public class OrderService {
                     v.items().getProductId(),
                     v.product().name(),
                     v.product().price(),
-                    v.items().getQuantity()
+                    v.items().getQuantity(),
+                    v.product().thumbnailUrl()
                 ))
                 .toList();
             orderItemRepository.saveAll(orderItems);
@@ -172,7 +173,7 @@ public class OrderService {
                 Orders.create(userId, orderName, totalAmount, idempotencyKey, addr.recipientName(),
                     addr.recipientPhone(), addr.zipCode(), addr.address(), addr.addressDetail()));
             OrderItems orderItem = OrderItems.create(order.getId(), infoResponse.productId(),
-                orderName, infoResponse.price(), request.quantity());
+                orderName, infoResponse.price(), request.quantity(), infoResponse.thumbnailUrl());
             orderItemRepository.save(orderItem);
             return order;
         } catch (DataIntegrityViolationException e) {

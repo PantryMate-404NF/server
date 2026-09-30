@@ -7,7 +7,8 @@ public record OrderItemDetail(
     Long productId,
     String productName,
     Long price,
-    Integer quantity
+    Integer quantity,
+    String thumbnailUrl
 ) {
     public static OrderItemDetail from(OrderItems orderItem) {
         return new OrderItemDetail(
@@ -15,7 +16,8 @@ public record OrderItemDetail(
             orderItem.getProductId(),
             orderItem.getProductName(),
             orderItem.getPrice(),
-            orderItem.getQuantity()
+            orderItem.getQuantity(),
+            orderItem.getThumbnailUrl()
         );
     }
 }

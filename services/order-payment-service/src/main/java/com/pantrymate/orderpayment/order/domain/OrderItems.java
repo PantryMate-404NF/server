@@ -38,13 +38,17 @@ public class OrderItems {
     @Column(nullable = false)
     private Integer quantity;
 
-    public static OrderItems create(Long orderId, Long productId, String productName, Long price, Integer quantity) {
+    private String thumbnailUrl;
+
+    public static OrderItems create(Long orderId, Long productId, String productName, Long price, Integer quantity,
+        String thumbnailUrl) {
         return OrderItems.builder()
             .orderId(orderId)
             .productId(productId)
             .productName(productName)
             .price(price)
             .quantity(quantity)
+            .thumbnailUrl(thumbnailUrl)
             .build();
     }
 
