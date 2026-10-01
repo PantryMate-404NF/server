@@ -52,6 +52,54 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
     }
+
+    apply plugin: 'jacoco'
+    jacoco {
+        toolVersion = "0.8.15"
+    }
+    test {
+        finalizedBy jacocoTestReport
+    }
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            csv.required = false
+            html.required = true
+        }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/dto/**',
+                    '**/domain/**/entity/**',
+                    '**/infrastructure/config/**',
+                    '**/global/config/**',
+                    '**/exception/**',
+                    '**/client/**',
+                    '**/*Application*',
+                    '**/*Constants*'
+                ])
+            }))
+        }
+    }
+    jacocoTestCoverageVerification {
+        violationRules {
+            rule {
+                element = 'CLASS'
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.75
+                }
+                excludes = [
+                    '*.dto.*',
+                    '*.entity.*',
+                    '*.config.*',
+                    '*Application*'
+                ]
+            }
+        }
+    }
 }
 
 // Spring Boot 플러그인(실행 가능 JAR)은 실제 서버 모듈에만 적용
