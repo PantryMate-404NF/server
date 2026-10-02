@@ -1,6 +1,7 @@
 package com.pantrymate.pantryrecipe.pantry.infrastructure;
 
 import com.pantrymate.common.dto.ApiResponse;
+import com.pantrymate.pantryrecipe.ingredient.domain.enums.StorageType;
 import com.pantrymate.pantryrecipe.pantry.domain.ProductInfoProvider;
 import com.pantrymate.pantryrecipe.recipe.infrastructure.ProductServiceClient;
 import com.pantrymate.pantryrecipe.recipe.infrastructure.ProductServiceClient.ProductDetailPayload;
@@ -41,13 +42,30 @@ public class FeignProductInfoProvider implements ProductInfoProvider {
             if (detail == null) {
                 return Optional.empty();
             }
-            ProductInfo info =
-                    new ProductInfo(detail.productId(), detail.name(), detail.thumbnailUrl(), detail.ingredientId());
+            ProductInfo info = new ProductInfo(
+                    detail.productId(),
+                    detail.name(),
+                    detail.thumbnailUrl(),
+                    detail.ingredientId(),
+                    parseStorageType(detail.storageType()));
             cache.put(productId, new Cached(info, Instant.now()));
             return Optional.of(info);
         } catch (RuntimeException e) {
             log.warn("상품 정보 조회 실패(productId={}): {}", productId, e.getMessage());
             return Optional.empty();
+        }
+    }
+
+    /** 상품 쪽 값이 비어있거나 우리 Enum과 안 맞으면 식재료 사전 기본값으로 폴백하도록 null 처리한다. */
+    private StorageType parseStorageType(String rawStorageType) {
+        if (rawStorageType == null) {
+            return null;
+        }
+        try {
+            return StorageType.valueOf(rawStorageType);
+        } catch (IllegalArgumentException e) {
+            log.warn("알 수 없는 상품 보관방법 값: {}", rawStorageType);
+            return null;
         }
     }
 }

@@ -29,5 +29,6 @@ public interface ProductServiceClient {
             Integer packageCount,
             String thumbnailUrl,
             String status,
-            Long ingredientId) {}
+            Long ingredientId,
+            String storageType) {}
 }

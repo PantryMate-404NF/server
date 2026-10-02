@@ -130,8 +130,10 @@ public class DeliveryAutoRegisterService {
                 ? fallbackExtraDays
                 : ingredient.getExtendedConsumptionDays();
         LocalDate expiryDate = (sellByDate == null ? purchaseDate : sellByDate).plusDays(extraDays);
-        StorageType storageType =
-                ingredient.getDefaultStorageType() == null ? StorageType.REFRIGERATED : ingredient.getDefaultStorageType();
+        // 상품 자체의 보관방법을 우선하고, 없으면 식재료 사전 기본값, 그마저 없으면 REFRIGERATED로 폴백한다.
+        StorageType storageType = product.get().storageType() != null
+                ? product.get().storageType()
+                : ingredient.getDefaultStorageType() == null ? StorageType.REFRIGERATED : ingredient.getDefaultStorageType();
 
         try {
             pantryItemRepository.save(PantryItem.createAuto(
