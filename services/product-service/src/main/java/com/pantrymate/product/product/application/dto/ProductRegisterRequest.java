@@ -39,7 +39,10 @@ public record ProductRegisterRequest(
     //재고는 0개를 허용하므로 0이상이여야한다.
     @NotNull
     @PositiveOrZero
-    Integer stockQuantity
+    Integer stockQuantity,
+
+    @NotNull
+    String storageType
 
 ) {
 

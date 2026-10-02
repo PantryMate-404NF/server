@@ -19,7 +19,8 @@ public record ProductDetailResponse(
     List<ProductImageResponse> images,
     Integer stockQuantity,
     String status,
-    Long ingredientId
+    Long ingredientId,
+    String storageType
 ) {
 
     public static ProductDetailResponse of(Products products, String categoryName,
@@ -40,7 +41,8 @@ public record ProductDetailResponse(
             images,
             products.getStockQuantity(),
             products.getStatus().name(),
-            products.getIngredientId()
+            products.getIngredientId(),
+            products.getStorageType() == null ? null : products.getStorageType().name()
         );
     }
 }

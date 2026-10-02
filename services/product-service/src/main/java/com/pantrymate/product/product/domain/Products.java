@@ -2,6 +2,7 @@ package com.pantrymate.product.product.domain;
 
 import com.pantrymate.product.product.domain.enums.ProductStatus;
 import com.pantrymate.product.product.domain.enums.ProductUnit;
+import com.pantrymate.product.product.domain.enums.StorageType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -102,6 +103,10 @@ public class Products {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ProductStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StorageType storageType;
 
     @Column(nullable = false)
     @CreatedDate
@@ -215,7 +220,9 @@ public class Products {
         String origin,
         String description,
         String thumbnailUrl,
-        Long ingredientId) {
+        Long ingredientId,
+        StorageType storageType
+    ) {
         if (name != null) {
             this.name = name;
         }
@@ -245,6 +252,9 @@ public class Products {
         }
         if (ingredientId != null) {
             this.ingredientId = ingredientId;
+        }
+        if (storageType != null) {
+            this.storageType = storageType;
         }
 
     }

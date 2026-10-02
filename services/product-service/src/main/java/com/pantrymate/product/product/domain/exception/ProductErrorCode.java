@@ -19,7 +19,8 @@ public enum ProductErrorCode implements ErrorCode {
     ALREADY_DISCONTINUED(HttpStatus.CONFLICT, "PRODUCT-008", "이미 판매가 종료된 상품입니다."),
     INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "PRODUCT-009", "재고가 부족한 상품입니다."),
     INVALID_UNIT(HttpStatus.BAD_REQUEST, "PRODUCT-010", "일치하지 않는 단위입니다."),
-    FORBIDDEN(HttpStatus.FORBIDDEN, "PRODUCT-011", "접근이 거부되었습니다.");
+    FORBIDDEN(HttpStatus.FORBIDDEN, "PRODUCT-011", "접근이 거부되었습니다."),
+    INVALID_STORAGE_TYPE(HttpStatus.BAD_REQUEST, "PRODUCT-012", "일치하지 않는 보관방법입니다.");
 
 
     private final HttpStatus status;

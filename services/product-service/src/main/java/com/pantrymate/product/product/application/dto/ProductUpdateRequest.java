@@ -10,7 +10,8 @@ public record ProductUpdateRequest(
     String origin,
     String description,
     String thumbnailUrl,
-    Long ingredientId
+    Long ingredientId,
+    String storageType
 ) {
 
 }

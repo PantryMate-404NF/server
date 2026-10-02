@@ -7,7 +7,8 @@ public record ProductSummaryResponse(
     String name,
     Long price,
     String thumbnailUrl,
-    String status
+    String status,
+    String storageType
 ) {
 
     public static ProductSummaryResponse from(Products product) {
@@ -16,7 +17,8 @@ public record ProductSummaryResponse(
             product.getName(),
             product.getPrice(),
             product.getThumbnailUrl(),
-            product.getStatus().name()
+            product.getStatus().name(),
+            product.getStorageType() == null ? null : product.getStorageType().name()
         );
     }
 }

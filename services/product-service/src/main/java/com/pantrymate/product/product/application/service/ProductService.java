@@ -18,6 +18,7 @@ import com.pantrymate.product.product.domain.ProductImages;
 import com.pantrymate.product.product.domain.Products;
 import com.pantrymate.product.product.domain.enums.ProductStatus;
 import com.pantrymate.product.product.domain.enums.ProductUnit;
+import com.pantrymate.product.product.domain.enums.StorageType;
 import com.pantrymate.product.product.domain.exception.ProductErrorCode;
 import com.pantrymate.product.product.domain.repository.ProductImageRepository;
 import com.pantrymate.product.product.domain.repository.ProductRepository;
@@ -109,7 +110,7 @@ public class ProductService {
             throw new BusinessException(ProductErrorCode.INVALID_PRICE);
         }
         ProductUnit unit = (request.unit() != null) ? ProductUnit.from(request.unit()) : null;
-
+        StorageType storageType = (request.storageType() != null) ? StorageType.from(request.storageType()) : null;
         product.updateInfo(
             request.name(),
             request.categoryId(),
@@ -120,7 +121,8 @@ public class ProductService {
             request.origin(),
             request.description(),
             request.thumbnailUrl(),
-            request.ingredientId()
+            request.ingredientId(),
+            storageType
         );
         return product;
     }
@@ -184,6 +186,7 @@ public class ProductService {
             .thumbnailUrl(request.thumbnailUrl())
             .ingredientId(request.ingredientId())
             .stockQuantity(request.stockQuantity())
+            .storageType(StorageType.from(request.storageType()))
             .status(initialStatus)
             .createdAt(now)
             .updatedAt(now)
