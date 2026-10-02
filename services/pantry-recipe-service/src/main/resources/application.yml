@@ -73,7 +73,7 @@ pantry:
   # 팬트리 자동 등록(PANTRY-001). 배송 도메인 도입 전까지 결제 완료 후 delivery-delay-minutes가 지난 주문을 배송 완료로 간주한다.
   auto-register:
     enabled: true
-    delivery-delay-minutes: 30
+    delivery-delay-minutes: 1
     lookback-days: 7
     min-sync-interval-seconds: 60
   expiry:
